@@ -109,3 +109,5 @@ panic = "abort"
 
 [patch.crates-io]
 winit = { path = "../winit" }
+accesskit = { path = "../accesskit/common" }
+accesskit_winit = { path = "../accesskit/platforms/winit" }

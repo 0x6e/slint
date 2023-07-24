@@ -619,9 +619,11 @@ impl WindowAdapterInternal for WinitWindowAdapter {
                 corelib::window::InputMethodRequest::Disable { .. } => {
                     winit_window.set_ime_allowed(false)
                 }
-                corelib::window::InputMethodRequest::SetPosition { position, .. } => {
-                    winit_window.set_ime_position(position_to_winit(&position.into()))
-                }
+                corelib::window::InputMethodRequest::SetPosition { position, .. } => winit_window
+                    .set_ime_cursor_area(
+                        position_to_winit(&position.into()),
+                        winit::dpi::LogicalSize::new(0.0, 0.0),
+                    ),
                 _ => {}
             };
         });

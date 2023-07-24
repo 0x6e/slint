@@ -313,13 +313,13 @@ fn process_window_event(
             // For now: Match Qt's behavior of mapping command to control and control to meta (LWin/RWin).
             let key_code = match event.physical_key {
                 #[cfg(target_os = "macos")]
-                winit::keyboard::KeyCode::ControlLeft => winit::keyboard::KeyCode::WinLeft,
+                winit::keyboard::KeyCode::ControlLeft => winit::keyboard::KeyCode::SuperLeft,
                 #[cfg(target_os = "macos")]
-                winit::keyboard::KeyCode::ControlRight => winit::keyboard::KeyCode::WinRight,
+                winit::keyboard::KeyCode::ControlRight => winit::keyboard::KeyCode::SuperRight,
                 #[cfg(target_os = "macos")]
-                winit::keyboard::KeyCode::WinLeft => winit::keyboard::KeyCode::ControlLeft,
+                winit::keyboard::KeyCode::SuperLeft => winit::keyboard::KeyCode::ControlLeft,
                 #[cfg(target_os = "macos")]
-                winit::keyboard::KeyCode::WinRight => winit::keyboard::KeyCode::ControlRight,
+                winit::keyboard::KeyCode::SuperRight => winit::keyboard::KeyCode::ControlRight,
                 code => code,
             };
             window.currently_pressed_key_code().set(match event.state {
