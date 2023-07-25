@@ -15,7 +15,7 @@ use i_slint_core as corelib;
 use corelib::api::EventLoopError;
 use corelib::graphics::euclid;
 use corelib::input::{KeyEventType, KeyInputEvent, MouseEvent};
-use corelib::window::*;
+use corelib::{window::*, SharedString};
 use std::cell::{RefCell, RefMut};
 use std::rc::{Rc, Weak};
 
@@ -326,8 +326,14 @@ fn process_window_event(
                 winit::event::ElementState::Pressed => Some(key_code),
                 _ => None,
             });
-            if let Some(text) = &event.text {
-                let text = text.as_str().into();
+
+            // KeyEvent.text is empty on release, and KeyEvent.logical_key does not map to the left/right special keys.
+            // Check winit_key_to_char first as it does only maps special keys, then fall back to converting
+            // KeyEvent.logical_key to text (which is how KeyEvent.text is created for the press events).
+            if let Some(text) = key_codes::winit_key_to_char(key_code)
+                .map(SharedString::from)
+                .or(event.logical_key.to_text().map(SharedString::from))
+            {
                 window.window().dispatch_event(match event.state {
                     winit::event::ElementState::Pressed => {
                         corelib::platform::WindowEvent::KeyPressed { text }
