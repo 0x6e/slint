@@ -333,6 +333,25 @@ jobs:
             - name: S3Box
               run: cargo +esp check -p printerdemo_mcu --target xtensa-esp32s3-none-elf --no-default-features --features=mcu-board-support/esp32-s3-box  --config examples/mcu-board-support/esp32_s3_box/cargo-config.toml --release
 
+    mcu_zephyr:
+        runs-on: ubuntu-22.04
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  path: slint
+            - name: Setup Zephyr project
+              uses: zephyrproject-rtos/action-zephyr-setup@v1
+              with:
+                app-path: slint
+                manifest-file-name: examples/printerdemo_mcu/zephyr/west.yaml
+                sdk-version: 0.16.5-1
+            - name: Build for simulator
+              run: |
+                west build -b native_sim_64 -p always slint/examples/printerdemo_mcu/zephyr
+            - name: Build for NXP MIMXRT1170-EVKB
+              run: |
+                west build -b mimxrt1170_evkb_cm7 -p always slint/examples/printerdemo_mcu/zephyr -- -DSHIELD=rk055hdmipi4ma0
+
     ffi_32bit_build:
         runs-on: ubuntu-22.04
         steps:
