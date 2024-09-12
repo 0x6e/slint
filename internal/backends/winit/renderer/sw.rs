@@ -108,11 +108,7 @@ impl super::WinitCompatibleRenderer for WinitSoftwareRenderer {
             _ => RepaintBufferType::NewBuffer,
         });
 
-        let region = if std::env::var_os("SLINT_LINE_BY_LINE").is_none() {
-            let buffer: &mut [SoftBufferPixel] =
-                bytemuck::cast_slice_mut(target_buffer.deref_mut());
-            self.renderer.render(buffer, width.get() as usize)
-        } else {
+        let region = if std::env::var_os("SLINT_LINE_BY_LINE").is_some() {
             // SLINT_LINE_BY_LINE is set and this is a debug mode where we also render in a Rgb565Pixel
             struct FrameBuffer<'a> {
                 buffer: &'a mut [u32],
@@ -140,6 +136,10 @@ impl super::WinitCompatibleRenderer for WinitSoftwareRenderer {
                 buffer: &mut target_buffer,
                 line: vec![Default::default(); width.get() as usize],
             })
+        } else {
+            let buffer: &mut [SoftBufferPixel] =
+                bytemuck::cast_slice_mut(target_buffer.deref_mut());
+            self.renderer.render(buffer, width.get() as usize)
         };
 
         winit_window.pre_present_notify();
