@@ -34,6 +34,7 @@ unicode = ["unicode-script", "unicode-linebreak"]
 
 software-renderer-systemfonts = ["shared-fontdb", "rustybuzz", "fontdue", "software-renderer"]
 software-renderer = ["bytemuck"]
+experimental-software-renderer = ["software-renderer"]
 
 image-decoders = ["dep:image", "dep:clru"]
 image-default-formats = ["image?/default-formats"]

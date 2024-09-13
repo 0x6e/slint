@@ -163,6 +163,9 @@ renderer-skia-vulkan = ["i-slint-backend-selector/renderer-skia-vulkan", "std"]
 ## Render using the software renderer.
 renderer-software = ["i-slint-backend-selector/renderer-software", "i-slint-core/software-renderer"]
 
+## Render using the experimental software renderer. (Experimental)
+renderer-experimental-software = ["renderer-software", "i-slint-backend-selector/renderer-experimental-software", "i-slint-core/experimental-software-renderer"]
+
 ## KMS with Vulkan or EGL and libinput on Linux are used to render the application in full screen mode, without any
 ## windowing system. Requires libseat. If you don't have libseat, select `backend-linuxkms-noseat` instead. (Experimental)
 backend-linuxkms = ["i-slint-backend-selector/backend-linuxkms", "std"]

@@ -44,9 +44,9 @@ use fixed::Fixed;
 use num_traits::Float;
 use num_traits::NumCast;
 
-pub use draw_functions::{PremultipliedRgbaColor, Rgb565Pixel, TargetPixel};
-// #[cfg(feature = "experimental")]
+#[cfg(feature = "experimental-software-renderer")]
 pub use draw_functions::TargetPixelBuffer;
+pub use draw_functions::{PremultipliedRgbaColor, Rgb565Pixel, TargetPixel};
 
 type PhysicalLength = euclid::Length<i16, PhysicalPx>;
 /// A Rectangle in physical pixels.
@@ -647,7 +647,7 @@ impl SoftwareRenderer {
     }
 
     /// Render the window to the given [`TargetPixelBuffer`].
-    // #[cfg(feature = "experimental")]
+    #[cfg(feature = "experimental-software-renderer")]
     pub async fn render_buffer(&self, buffer: &mut impl TargetPixelBuffer) -> PhysicalRegion {
         let Some(window) = self.maybe_window_adapter.borrow().as_ref().and_then(|w| w.upgrade())
         else {
@@ -1286,11 +1286,13 @@ impl<'a, T: TargetPixel> ProcessScene for RenderToBuffer<'a, T> {
     }
 }
 
+#[cfg(feature = "experimental-software-renderer")]
 struct RenderToAsyncBuffer<'a, TargetPixelBuffer> {
     buffer: &'a mut TargetPixelBuffer,
     dirty_region: PhysicalRegion,
 }
 
+#[cfg(feature = "experimental-software-renderer")]
 impl<'a, T: TargetPixelBuffer> ProcessScene for RenderToAsyncBuffer<'a, T> {
     fn process_texture(&mut self, _geometry: PhysicalRect, _texture: SceneTexture<'static>) {
         todo!()
