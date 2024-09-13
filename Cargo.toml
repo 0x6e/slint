@@ -12,6 +12,7 @@ members = [
     'api/wasm-interpreter',
     'docs/reference/src/quickstart',
     'examples/7guis',
+    'examples/async_softwarerenderer',
     'examples/gallery',
     'examples/imagefilter/rust',
     'examples/maps',
