@@ -1,0 +1,19 @@
+# Copyright © SixtyFPS GmbH <info@slint.dev>
+# SPDX-License-Identifier: MIT
+
+[package]
+name = "async-softwarerenderer"
+version = "0.1.0"
+edition = "2021"
+authors = ["Slint Developers <info@slint.dev>"]
+build = "build.rs"
+license = "MIT"
+publish = false
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+slint = { path = "../../api/rs/slint", features = ["renderer-software"] }
+
+[build-dependencies]
+slint-build = { path = "../../api/rs/build" }
