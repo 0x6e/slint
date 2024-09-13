@@ -58,6 +58,7 @@ softbuffer = { workspace = true, optional = true, default-features = false }
 imgref = { version = "1.6.1", optional = true }
 rgb = { version = "0.8.27", optional = true }
 bytemuck = { workspace = true, optional = true, features = ["derive"] }
+spin_on = { workspace = true }
 
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

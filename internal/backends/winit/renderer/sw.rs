@@ -136,6 +136,29 @@ impl super::WinitCompatibleRenderer for WinitSoftwareRenderer {
                 buffer: &mut target_buffer,
                 line: vec![Default::default(); width.get() as usize],
             })
+        } else if std::env::var_os("SLINT_ASYNC_RENDERING").is_some() {
+            struct AsyncFrameBuffer<'a> {
+                data: &'a mut [SoftBufferPixel],
+                stride: usize,
+            }
+            impl<'a> i_slint_core::software_renderer::TargetPixelBuffer for AsyncFrameBuffer<'a> {
+                async fn fill_rectangle(
+                    &mut self,
+                    rectangle: i_slint_core::software_renderer::PhysicalRect,
+                    color: PremultipliedRgbaColor,
+                ) {
+                    for y in rectangle.origin.y..(rectangle.origin.y + rectangle.size.height) {
+                        let begin = (y as usize) * self.stride + (rectangle.origin.x as usize);
+                        let end = begin + (rectangle.size.width as usize);
+                        TargetPixel::blend_slice(&mut self.data[begin..end], color);
+                    }
+                }
+            }
+
+            spin_on::spin_on(self.renderer.render_buffer(&mut AsyncFrameBuffer {
+                data: bytemuck::cast_slice_mut(target_buffer.deref_mut()),
+                stride: width.get() as usize,
+            }))
         } else {
             let buffer: &mut [SoftBufferPixel] =
                 bytemuck::cast_slice_mut(target_buffer.deref_mut());
