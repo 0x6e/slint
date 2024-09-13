@@ -14,7 +14,7 @@ description = "Slint Widgets Gallery Example"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-slint = { path = "../../api/rs/slint", features = ["renderer-software"] }
+slint = { path = "../../api/rs/slint", features = ["renderer-experimental-software"] }
 
 [build-dependencies]
 slint-build = { path = "../../api/rs/build" }
