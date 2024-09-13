@@ -741,6 +741,13 @@ impl TargetPixel for PremultipliedRgbaColor {
     }
 }
 
+/// Trait for a pixel buffer that may be rendered asynchronously.
+// #[cfg(feature = "experimental")]
+pub trait TargetPixelBuffer {
+    /// Fill a rectangle in the buffer with the given color.
+    async fn fill_rectangle(&mut self, rectangle: PhysicalRect, color: PremultipliedRgbaColor);
+}
+
 /// A 16bit pixel that has 5 red bits, 6 green bits and  5 blue bits
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Default, bytemuck::Pod, bytemuck::Zeroable)]

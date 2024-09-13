@@ -45,9 +45,12 @@ use num_traits::Float;
 use num_traits::NumCast;
 
 pub use draw_functions::{PremultipliedRgbaColor, Rgb565Pixel, TargetPixel};
+// #[cfg(feature = "experimental")]
+pub use draw_functions::TargetPixelBuffer;
 
 type PhysicalLength = euclid::Length<i16, PhysicalPx>;
-type PhysicalRect = euclid::Rect<i16, PhysicalPx>;
+/// A Rectangle in physical pixels.
+pub type PhysicalRect = euclid::Rect<i16, PhysicalPx>;
 type PhysicalSize = euclid::Size2D<i16, PhysicalPx>;
 type PhysicalPoint = euclid::Point2D<i16, PhysicalPx>;
 type PhysicalBorderRadius = BorderRadius<i16, PhysicalPx>;
@@ -642,6 +645,111 @@ impl SoftwareRenderer {
             PhysicalRegion { ..Default::default() }
         }
     }
+
+    /// Render the window to the given [`TargetPixelBuffer`].
+    // #[cfg(feature = "experimental")]
+    pub async fn render_buffer(&self, buffer: &mut impl TargetPixelBuffer) -> PhysicalRegion {
+        let Some(window) = self.maybe_window_adapter.borrow().as_ref().and_then(|w| w.upgrade())
+        else {
+            return Default::default();
+        };
+        let window_inner = WindowInner::from_pub(window.window());
+        let factor = ScaleFactor::new(window_inner.scale_factor());
+        let rotation = self.rotation.get();
+        let (size, background) = if let Some(window_item) =
+            window_inner.window_item().as_ref().map(|item| item.as_pin_ref())
+        {
+            (
+                (LogicalSize::from_lengths(window_item.width(), window_item.height()).cast()
+                    * factor)
+                    .cast(),
+                window_item.background(),
+            )
+        } else if rotation.is_transpose() {
+            todo!()
+        } else {
+            todo!()
+        };
+        if size.is_empty() {
+            return Default::default();
+        }
+        let buffer_renderer = SceneBuilder::new(
+            size,
+            factor,
+            window_inner,
+            RenderToAsyncBuffer { buffer: buffer, dirty_region: Default::default() },
+            rotation,
+        );
+        let mut renderer = self.partial_rendering_state.create_partial_renderer(buffer_renderer);
+
+        window_inner
+            .draw_contents(|components| {
+                let logical_size = (size.cast() / factor).cast();
+
+                let dirty_region_of_existing_buffer = match self.repaint_buffer_type.get() {
+                    RepaintBufferType::NewBuffer => {
+                        Some(LogicalRect::from_size(logical_size).into())
+                    }
+                    RepaintBufferType::ReusedBuffer => None,
+                    RepaintBufferType::SwappedBuffers => Some(self.prev_frame_dirty.take()),
+                };
+
+                let dirty_region_for_this_frame = self.partial_rendering_state.apply_dirty_region(
+                    &mut renderer,
+                    components,
+                    logical_size,
+                    dirty_region_of_existing_buffer,
+                );
+
+                if self.repaint_buffer_type.get() == RepaintBufferType::SwappedBuffers {
+                    self.prev_frame_dirty.set(dirty_region_for_this_frame);
+                }
+
+                let rotation = RotationInfo { orientation: rotation, screen_size: size };
+                let screen_rect = PhysicalRect::from_size(size);
+                let mut i = renderer.dirty_region.iter().filter_map(|r| {
+                    (r.cast() * factor)
+                        .to_rect()
+                        .round_out()
+                        .cast()
+                        .intersection(&screen_rect)?
+                        .transformed(rotation)
+                        .into()
+                });
+                let dirty_region = PhysicalRegion {
+                    rectangles: core::array::from_fn(|_| i.next().unwrap_or_default().to_box2d()),
+                    count: renderer.dirty_region.iter().count(),
+                };
+                drop(i);
+
+                // TODO: gradient background
+                let mut bg = TargetPixel::background();
+                TargetPixel::blend(&mut bg, background.color().into());
+                for r in dirty_region.rectangles {
+                    renderer.actual_renderer.processor.process_rectangle(r.to_rect(), bg)
+                }
+
+                renderer.actual_renderer.processor.dirty_region = dirty_region.clone();
+
+                for (component, origin) in components {
+                    crate::item_rendering::render_component_items(
+                        component,
+                        &mut renderer,
+                        *origin,
+                    );
+                }
+
+                if let Some(metrics) = &self.rendering_metrics_collector {
+                    metrics.measure_frame_rendered(&mut renderer);
+                    if metrics.refresh_mode() == RefreshMode::FullSpeed {
+                        self.partial_rendering_state.force_screen_refresh();
+                    }
+                }
+
+                dirty_region
+            })
+            .unwrap_or_default()
+    }
 }
 
 #[doc(hidden)]
@@ -1175,6 +1283,37 @@ impl<'a, T: TargetPixel> ProcessScene for RenderToBuffer<'a, T> {
                 extra_left_clip,
             );
         });
+    }
+}
+
+struct RenderToAsyncBuffer<'a, TargetPixelBuffer> {
+    buffer: &'a mut TargetPixelBuffer,
+    dirty_region: PhysicalRegion,
+}
+
+impl<'a, T: TargetPixelBuffer> ProcessScene for RenderToAsyncBuffer<'a, T> {
+    fn process_texture(&mut self, _geometry: PhysicalRect, _texture: SceneTexture<'static>) {
+        todo!()
+    }
+
+    fn process_rectangle(&mut self, geometry: PhysicalRect, color: PremultipliedRgbaColor) {
+        spin_on::spin_on(self.buffer.fill_rectangle(geometry, color));
+    }
+
+    fn process_rounded_rectangle(&mut self, _geometry: PhysicalRect, _data: RoundedRectangle) {
+        todo!()
+    }
+
+    fn process_shared_image_buffer(
+        &mut self,
+        _geometry: PhysicalRect,
+        _buffer: SharedBufferCommand,
+    ) {
+        todo!()
+    }
+
+    fn process_gradient(&mut self, _geometry: PhysicalRect, _gradient: GradientCommand) {
+        todo!()
     }
 }
 

@@ -96,6 +96,8 @@ chrono = { version = "0.4", default-features = false, features = ["alloc"] }
 rustybuzz = { workspace = true, optional = true }
 fontdue = { workspace = true, optional = true }
 
+spin_on = { workspace = true }
+
 [target.'cfg(target_family = "unix")'.dependencies]
 gettext-rs = { version = "0.7.1", optional = true, features = ["gettext-system"] }
 
