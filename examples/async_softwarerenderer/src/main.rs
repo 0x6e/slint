@@ -1,17 +1,19 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
+#![no_std]
+#![cfg_attr(not(feature = "simulator"), no_main)]
 // Prevent console window in addition to Slint window in Windows release builds when, e.g., starting the app via file manager. Ignored on other platforms.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::error::Error;
-
 slint::include_modules!();
 
-fn main() -> Result<(), Box<dyn Error>> {
-    let ui = AppWindow::new()?;
+#[mcu_board_support::entry]
+fn main() -> ! {
+    mcu_board_support::init();
 
-    ui.run()?;
+    let ui = AppWindow::new().unwrap();
+    ui.run().unwrap();
 
-    Ok(())
+    panic!("The async software renderer demo should not quit")
 }

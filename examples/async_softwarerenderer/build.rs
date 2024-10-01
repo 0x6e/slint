@@ -3,4 +3,5 @@
 
 fn main() {
     slint_build::compile("ui/appwindow.slint").unwrap();
+    slint_build::print_rustc_flags().unwrap();
 }
