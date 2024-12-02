@@ -12,6 +12,11 @@ if(BOARD STREQUAL "native_sim/native/64")
     set(SLINT_LIBRARY_CARGO_FLAGS "-Zbuild-std=core,alloc")
 elseif(BOARD STREQUAL "mimxrt1170_evk@B/mimxrt1176/cm7")
     set(Rust_CARGO_TARGET "thumbv7em-none-eabi")
+elseif(BOARD STREQUAL "stm32h747i_disco/stm32h747xx/m7")
+    # set(Rust_CARGO_TARGET "thumbv7em-none-eabihf")
+    # /opt/zephyr-sdk-0.16.8/arm-zephyr-eabi/bin/../lib/gcc/arm-zephyr-eabi/12.2.0/../../../../arm-zephyr-eabi/bin/ld.bfd: error: slint_build/api/cpp/libslint_cpp.a(slint_cpp.slint_cpp.1cb6bca15a13c941-cgu.10.rcgu.o) uses VFP register arguments, zephyr/zephyr_pre0.elf does not
+
+    set(Rust_CARGO_TARGET "thumbv7em-none-eabi")
 else()
     # See rustc --print target-list for available targets. Match that up with you supported board
     # https://docs.zephyrproject.org/latest/boards
