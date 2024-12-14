@@ -16,6 +16,18 @@ LOG_MODULE_REGISTER(zephyrSlint, LOG_LEVEL_DBG);
 #include <deque>
 #include <ranges>
 
+#define DISPLAY_NODE DT_CHOSEN(zephyr_display)
+
+#define DISPLAY_WIDTH DT_PROP(DISPLAY_NODE, width)
+#define DISPLAY_HEIGHT DT_PROP(DISPLAY_NODE, height)
+
+#ifdef SLINT_Z_STATIC_BUFFER
+#    define BYTES_PER_PIXEL 2
+#    define BUFFER_SIZE ((DISPLAY_WIDTH * DISPLAY_HEIGHT) * BYTES_PER_PIXEL)
+
+static uint8_t buffer[BUFFER_SIZE] Z_GENERIC_SECTION(.lvgl_buf) __aligned(BYTES_PER_PIXEL);
+#endif
+
 namespace {
 bool is_supported_pixel_format(display_pixel_format current_pixel_format)
 {
@@ -153,7 +165,10 @@ private:
     const slint::PhysicalSize m_size;
 
     bool m_needs_redraw = true;
-    std::vector<slint::platform::Rgb565Pixel> m_buffer;
+#ifndef SLINT_Z_STATIC_BUFFER
+    std::vector<slint::platform::Rgb565Pixel> m_buffer_container;
+#endif
+    std::span<slint::platform::Rgb565Pixel> m_buffer;
     display_buffer_descriptor m_buffer_descriptor;
 };
 
@@ -241,9 +256,20 @@ ZephyrWindowAdapter::ZephyrWindowAdapter(const device *display, RepaintBufferTyp
       m_rotationInfo(info),
       m_size(transformed(m_rotationInfo.size, m_rotationInfo))
 {
-    m_buffer.resize(m_size.width * m_size.height);
+    // m_buffer.resize(m_size.width * m_size.height);
 
-    m_buffer_descriptor.buf_size = sizeof(m_buffer[0]) * m_buffer.size();
+    const auto buffer_size = m_size.width * m_size.height * sizeof(slint::platform::Rgb565Pixel);
+#ifdef SLINT_Z_STATIC_BUFFER
+    if (buffer_size != BUFFER_SIZE)
+        LOG_ERR("Incorrect buffer size. Needed: %u, got: %u", buffer_size, BUFFER_SIZE);
+    m_buffer = std::span<slint::platform::Rgb565Pixel>(
+            reinterpret_cast<slint::platform::Rgb565Pixel *>(buffer), m_size.width * m_size.height);
+#else
+    m_buffer_container.resize(m_size.width * m_size.height);
+    m_buffer = m_buffer_container;
+#endif
+
+    m_buffer_descriptor.buf_size = buffer_size;
     m_buffer_descriptor.width = m_size.width;
     m_buffer_descriptor.height = m_size.height;
     m_buffer_descriptor.pitch = m_size.width;

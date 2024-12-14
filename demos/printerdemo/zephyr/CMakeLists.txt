@@ -17,6 +17,9 @@ elseif(BOARD STREQUAL "mimxrt1170_evk@B/mimxrt1176/cm7")
 elseif(BOARD STREQUAL "stm32h747i_disco/stm32h747xx/m7")
     set(Rust_CARGO_TARGET "thumbv7em-none-eabi")
 
+    # Eventually these should be Kconfig options, and set in the board specific .conf file.
+    add_definitions(-DSLINT_Z_STATIC_BUFFER)
+
     # The non-mcu printer demo does not fit on this device.
     set(PRINTERDEMO_UI_SOURCE_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../printerdemo_mcu)
 else()
@@ -27,6 +30,10 @@ endif()
 
 find_package(Zephyr)
 project(slint_zephyr_printer_demo_mcu LANGUAGES CXX)
+
+if(BOARD STREQUAL "stm32h747i_disco")
+    zephyr_linker_sources(SECTIONS ${BOARD_DIR}/dc_ram.ld)
+endif()
 
 set(SLINT_FEATURE_FREESTANDING ON)
 set(SLINT_FEATURE_RENDERER_SOFTWARE ON)
