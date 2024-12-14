@@ -30,6 +30,10 @@ endif()
 find_package(Zephyr)
 project(slint_zephyr_printer_demo_mcu LANGUAGES CXX)
 
+if(BOARD STREQUAL "stm32h747i_disco")
+    zephyr_linker_sources(SECTIONS ${BOARD_DIR}/dc_ram.ld)
+endif()
+
 set(SLINT_FEATURE_FREESTANDING ON)
 set(SLINT_FEATURE_RENDERER_SOFTWARE ON)
 set(DEFAULT_SLINT_EMBED_RESOURCES "embed-for-software-renderer" CACHE STRING "")
