@@ -19,7 +19,7 @@ elseif(BOARD STREQUAL "stm32h747i_disco/stm32h747xx/m7")
     set(Rust_CARGO_TARGET "thumbv7em-none-eabi")
 
     # Eventually these should be Kconfig options, and set in the board specific .conf file.
-    add_definitions(-DSLINT_Z_STATIC_BUFFER)
+    add_definitions(-DSLINT_Z_STATIC_BUFFER -DSLINT_Z_INVERT_Y_INPUT)
 
     # The non-mcu printer demo does not fit on this device.
     set(PRINTERDEMO_UI_SOURCE_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../printerdemo_mcu)
