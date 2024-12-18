@@ -300,7 +300,7 @@ void ZephyrWindowAdapter::maybe_redraw()
     const auto slintRenderDelta = k_uptime_delta(&start);
     LOG_DBG("Rendering %d dirty regions:", std::ranges::size(region.rectangles()));
     for (auto [o, s] : region.rectangles()) {
-#ifndef CONFIG_SHIELD_RK055HDMIPI4MA0
+#ifdef SLINT_Z_BIG_ENDIAN_PIXELS
         // Convert to big endian pixel data for Zephyr, unless we are using the RK055HDMIPI4MA0
         // shield. See is_supported_pixel_format above.
         for (int y = o.y; y < o.y + s.height; y++) {
