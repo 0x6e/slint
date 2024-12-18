@@ -26,6 +26,9 @@ LOG_MODULE_REGISTER(zephyrSlint, LOG_LEVEL_DBG);
 
 static uint8_t buffer[BUFFER_SIZE] Z_GENERIC_SECTION(.lvgl_buf) __aligned(4);
 
+// Fixes the bit order of the pixel data
+#define CONFIG_SHIELD_RK055HDMIPI4MA0 1
+
 namespace {
 bool is_supported_pixel_format(display_pixel_format current_pixel_format)
 {
