@@ -448,7 +448,7 @@ void zephyr_process_input_event(struct input_event *event)
         pos.x = event->value;
         break;
     case INPUT_ABS_Y:
-        pos.y = event->value;
+        pos.y = DISPLAY_HEIGHT - event->value;
         break;
     default:
         LOG_WRN("Unexpected input event. Type: %#x, code: %u (%#x), value: %d, sync: %d",
