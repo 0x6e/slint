@@ -64,7 +64,7 @@ exhale_args = {
     "exhaleExecutesDoxygen": True,
     "exhaleDoxygenStdin": """INPUT = ../../api/cpp/include generated_include
 EXCLUDE_SYMBOLS = slint::cbindgen_private* slint::private_api* vtable* SLINT_DECL_ITEM
-EXCLUDE = ../../api/cpp/include/vtable.h ../../api/cpp/include/slint_tests_helper.h ../../api/cpp/include/slint-stm32.h
+EXCLUDE = ../../api/cpp/include/vtable.h ../../api/cpp/include/slint_tests_helper.h ../../api/cpp/include/slint-stm32.h ../../api/cpp/include/slint-dma2d-stm32.h
 ENABLE_PREPROCESSING = YES
 PREDEFINED += DOXYGEN
 INCLUDE_PATH = generated_include
