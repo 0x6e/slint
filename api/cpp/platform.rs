@@ -357,7 +357,7 @@ mod software_renderer {
     type SoftwareRendererOpaque = *const c_void;
     use i_slint_core::graphics::{IntRect, Rgb8Pixel};
     use i_slint_core::software_renderer::{
-        PhysicalRegion, RepaintBufferType, Rgb565Pixel, SoftwareRenderer,
+        PremultipliedRgbaColor, PhysicalRect, PhysicalRegion, RepaintBufferType, Rgb565Pixel, SoftwareRenderer,
     };
     use i_slint_core::SharedVector;
 
@@ -482,6 +482,32 @@ mod software_renderer {
         let processor = Rgb565Processor { process_line_fn, user_data };
 
         renderer.render_by_line(processor)
+    }
+
+    #[cfg(feature = "renderer-experimental-software")]
+    pub struct CppTargetPixelBuffer {
+        fill_rectangle: unsafe extern "C" fn(PhysicalRect, PremultipliedRgbaColor),
+    }
+
+    #[cfg(feature = "renderer-experimental-software")]
+    impl i_slint_core::software_renderer::TargetPixelBuffer for CppTargetPixelBuffer {
+        async fn fill_rectangle(
+            &mut self,
+            rectangle: i_slint_core::software_renderer::PhysicalRect,
+            color: PremultipliedRgbaColor,
+        ) {
+            unsafe { (self.fill_rectangle)(rectangle, color) };
+        }
+    }
+
+    #[cfg(feature = "renderer-experimental-software")]
+    #[no_mangle]
+    pub unsafe extern "C" fn slint_software_renderer_render_buffer(
+        r: SoftwareRendererOpaque,
+        buffer: &mut CppTargetPixelBuffer,
+    ) -> PhysicalRegion {
+        let renderer = &*(r as *const SoftwareRenderer);
+        spin_on::spin_on(renderer.render_buffer(buffer))
     }
 
     #[no_mangle]

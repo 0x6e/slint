@@ -1019,6 +1019,7 @@ declare_features! {
     renderer_skia_opengl
     renderer_skia_vulkan
     renderer_software
+    renderer_experimental_software
     gettext
     accessibility
     system_testing

@@ -732,6 +732,18 @@ public:
     }
 #    endif
 
+#ifdef SLINT_FEATURE_RENDERER_EXPERIMENTAL_SOFTWARE
+
+    PhysicalRegion render_buffer(/* a class that implements the API as virtual functions, or some callbacks?*/) const
+    {
+        auto r = cbindgen_private::slint_software_renderer_render_buffer(
+                inner,
+                // something here
+        );
+        return PhysicalRegion { r };
+    }
+#endif
+
     /// This enum describes the rotation that is applied to the buffer when rendering.
     /// To be used in set_rendering_rotation()
     enum class RenderingRotation {
