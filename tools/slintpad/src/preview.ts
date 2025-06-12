@@ -174,6 +174,9 @@ function create_instance(c: slint.WrappedCompiledComp, comp: slint.WrappedInstan
                 callback.setHandler = function (callback) { comp.set_callback(x, callback) };
                 return callback;
             },
+            set(callback) {
+                comp.set_callback(x, callback);
+            },
             enumerable: true,
         })
     });
