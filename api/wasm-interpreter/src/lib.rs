@@ -240,6 +240,34 @@ impl WrappedCompiledComp {
             .map(|(p, _)| JsValue::from(p))
             .collect()
     }
+    #[wasm_bindgen]
+    pub fn globals(&self) -> js_sys::Array {
+        self.0.globals().map(|name| JsValue::from(name)).collect()
+    }
+    #[wasm_bindgen]
+    pub fn global_properties(&self, global_name: String) -> Result<js_sys::Array, JsValue> {
+        let global_properties_and_callbacks = self
+            .0
+            .global_properties_and_callbacks(global_name.as_str())
+            .ok_or(JsValue::from(format!("Global {global_name} not found")))?;
+        Ok(global_properties_and_callbacks
+            .filter_map(
+                |(s, (t, _))| if t.is_property_type() { Some(JsValue::from(s)) } else { None },
+            )
+            .collect())
+    }
+    #[wasm_bindgen]
+    pub fn global_callbacks(&self, global_name: String) -> Result<js_sys::Array, JsValue> {
+        let global_properties_and_callbacks = self
+            .0
+            .global_properties_and_callbacks(global_name.as_str())
+            .ok_or(JsValue::from(format!("Global {global_name} not found")))?;
+        Ok(global_properties_and_callbacks
+            .filter_map(
+                |(s, (t, _))| if !t.is_property_type() { Some(JsValue::from(s)) } else { None },
+            )
+            .collect())
+    }
 }
 
 #[wasm_bindgen]
@@ -364,6 +392,65 @@ impl WrappedInstance {
             .collect::<Result<Vec<slint_interpreter::Value>, JsValue>>()?;
         self.0
             .invoke(name, &args)
+            .map_err(|e| JsError::new(&e.to_string()).into())
+            .and_then(|x| to_js_value(&x))
+    }
+
+    #[wasm_bindgen]
+    pub fn get_global_property(
+        &self,
+        global_name: &str,
+        property: &str,
+    ) -> Result<JsValue, JsValue> {
+        let v = self.0.get_global_property(global_name, property).map_err(|e| e.to_string())?;
+        to_js_value(&v)
+    }
+
+    #[wasm_bindgen]
+    pub fn set_global_property(
+        &self,
+        global_name: &str,
+        property: &str,
+        value: JsValue,
+    ) -> Result<(), JsValue> {
+        self.0
+            .set_global_property(global_name, property, to_eval_value(value)?)
+            .map_err(|e| JsError::new(&e.to_string()).into())
+    }
+
+    #[wasm_bindgen]
+    pub fn set_global_callback(
+        &self,
+        global_name: &str,
+        name: &str,
+        handler: js_sys::Function,
+    ) -> Result<(), JsValue> {
+        self.0
+            .set_global_callback(global_name, name, move |args| {
+                handler
+                    .apply(
+                        &JsValue::UNDEFINED,
+                        &args.iter().map(|a| to_js_value(a).unwrap_or_else(|x| x)).collect(),
+                    )
+                    .and_then(to_eval_value)
+                    .unwrap_or_default()
+            })
+            .map_err(|e| JsError::new(&e.to_string()).into())
+    }
+
+    #[wasm_bindgen]
+    pub fn invoke_global_callback(
+        &self,
+        global_name: &str,
+        name: &str,
+        args: js_sys::Array,
+    ) -> Result<JsValue, JsValue> {
+        let args = args
+            .iter()
+            .map(to_eval_value)
+            .collect::<Result<Vec<slint_interpreter::Value>, JsValue>>()?;
+        self.0
+            .invoke_global(global_name, name, &args)
             .map_err(|e| JsError::new(&e.to_string()).into())
             .and_then(|x| to_js_value(&x))
     }
