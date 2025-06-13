@@ -159,6 +159,10 @@ function create_instance(c: slint.WrappedCompiledComp, comp: slint.WrappedInstan
         setHandler(cb: any): void;
     }
 
+    const translateName = function translateName(key: string): string {
+        return key.replace(/-/g, "_");
+    };
+
     let ret = new Component(comp);
     c.properties().forEach((x: string) => {
         Object.defineProperty(ret, x.replace(/-/g, '_'), {
@@ -179,6 +183,79 @@ function create_instance(c: slint.WrappedCompiledComp, comp: slint.WrappedInstan
             },
             enumerable: true,
         })
+    });
+    c.globals().forEach((globalName: string) => {
+        const jsName = translateName(globalName);
+        if (ret[jsName] !== undefined) {
+            console.warn(
+                "Duplicated property name " +
+                globalName +
+                " (In JS: " +
+                jsName +
+                ")",
+            );
+        } else {
+            const globalObject = Object.create({});
+
+            c.global_properties(globalName)
+                .forEach((propName) => {
+                    const propJsName = translateName(propName);
+                    if (globalObject[propJsName] !== undefined) {
+                        console.warn(
+                            "Duplicated property name " +
+                            propJsName +
+                            " on global " +
+                            globalName,
+                        );
+                    } else {
+                        Object.defineProperty(globalObject, propJsName, {
+                            get() { return comp.get_global_property(globalName, propName); },
+                            set(newValue) {
+                                comp.set_global_property(globalName, propName, newValue);
+                            },
+                            enumerable: true,
+                        });
+                    }
+                });
+
+            c.global_callbacks(globalName).forEach((callbackName) => {
+                const callbackJsName = translateName(callbackName);
+                if (globalObject[callbackJsName] !== undefined) {
+                    console.warn(
+                        "Duplicated callback name " +
+                        callbackJsName +
+                        " on global " +
+                        globalName,
+                    );
+                } else {
+                    Object.defineProperty(globalObject, callbackJsName, {
+                        get() {
+                            /*
+                            let callback = function () { return comp.invoke_global_callback(globalName, callbackName, [...arguments]); } as Callback;
+                            callback.setHandler = function (callback) { comp.set_global_callback(globalName, callbackName, callback) };
+                            return callback;
+                            */
+                            return comp.invoke_global_callback(
+                                globalName,
+                                callbackName,
+                                Array.from(arguments),
+                            );
+                        },
+                        set(callback) {
+                            comp.set_global_callback(globalName, callbackName, callback);
+                        },
+                        enumerable: true,
+                    })
+                }
+            });
+
+            Object.defineProperty(ret, jsName, {
+                get() {
+                    return globalObject;
+                },
+                enumerable: true,
+            });
+        }
     });
     return ret;
 }
