@@ -623,6 +623,11 @@ impl ComponentCompiler {
         self.config.translation_domain = Some(domain);
     }
 
+    /// When Some, this is the path where the translations are looked at to bundle the translations
+    pub fn set_translation_path_bundle(&mut self, path: Option<std::path::PathBuf>) {
+        self.config.translation_path_bundle = path;
+    }
+
     /// Sets the callback that will be invoked when loading imported .slint files. The specified
     /// `file_loader_callback` parameter will be called with a canonical file path as argument
     /// and is expected to return a future that, when resolved, provides the source code of the

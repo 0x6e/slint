@@ -10,6 +10,7 @@ use slint_interpreter::ModelRc;
 use slint_interpreter::VecModel;
 use std::cell::RefCell;
 use std::path::Path;
+use std::path::PathBuf;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 
@@ -62,7 +63,15 @@ pub async fn compile_from_string(
     base_url: String,
     optional_import_callback: Option<ImportCallbackFunction>,
 ) -> Result<CompilationResult, JsValue> {
-    compile_from_string_with_style(source, base_url, String::new(), optional_import_callback).await
+    compile_from_string_with_style(
+        source,
+        base_url,
+        String::new(),
+        String::new(),
+        String::new(),
+        optional_import_callback,
+    )
+    .await
 }
 
 /// Same as [`compile_from_string`], but also takes a style parameter
@@ -71,12 +80,20 @@ pub async fn compile_from_string_with_style(
     source: String,
     base_url: String,
     style: String,
+    translation_domain: String,
+    translation_dir: String,
     optional_import_callback: Option<ImportCallbackFunction>,
 ) -> Result<CompilationResult, JsValue> {
     #[allow(deprecated)]
     let mut compiler = slint_interpreter::ComponentCompiler::default();
     if !style.is_empty() {
         compiler.set_style(style)
+    }
+    if !translation_domain.is_empty() {
+        compiler.set_translation_domain(translation_domain);
+    }
+    if !translation_dir.is_empty() {
+        compiler.set_translation_path_bundle(Some(PathBuf::from(translation_dir)))
     }
 
     if let Some(load_callback) = optional_import_callback {
