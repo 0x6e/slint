@@ -212,7 +212,7 @@ impl Document {
                     {
                         Some((import_file_path.to_string_lossy().into(), import.import_uri_token.clone()))
                     } else {
-                        diag.push_error(
+                        diag.push_warning(
                             format!("File \"{}\" not found", import.file),
                             &import.import_uri_token,
                         );
