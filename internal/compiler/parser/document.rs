@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
 use super::element::{parse_element, parse_element_content};
+use super::interface::parse_interface_declaration;
 use super::prelude::*;
 use super::r#type::{parse_enum_declaration, parse_rustattr, parse_struct_declaration};
 
@@ -16,6 +17,7 @@ use super::r#type::{parse_enum_declaration, parse_rustattr, parse_struct_declara
 /// enum Foo { hello }
 /// @rust-attr(...) struct X {}
 /// /* empty */
+/// interface I { }
 /// ```
 pub fn parse_document(p: &mut impl Parser) -> bool {
     let mut p = p.start_node(SyntaxKind::Document);
@@ -49,6 +51,11 @@ pub fn parse_document(p: &mut impl Parser) -> bool {
             }
             "enum" => {
                 if !parse_enum_declaration(&mut *p, None) {
+                    break;
+                }
+            }
+            "interface" => {
+                if !parse_interface_declaration(&mut *p, None) {
                     break;
                 }
             }

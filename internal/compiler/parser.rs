@@ -19,6 +19,7 @@ use std::fmt::Display;
 mod document;
 mod element;
 mod expressions;
+mod interface;
 mod statements;
 mod r#type;
 
@@ -330,7 +331,7 @@ declare_syntax! {
     }
     // syntax kind
     {
-        Document -> [ *Component, *ExportsList, *ImportSpecifier, *StructDeclaration, *EnumDeclaration ],
+        Document -> [ *Component, *ExportsList, *ImportSpecifier, *StructDeclaration, *EnumDeclaration, *InterfaceDeclaration ],
         /// `DeclaredIdentifier := Element { ... }`
         Component -> [ DeclaredIdentifier, Element ],
         /// `id := Element { ... }`
@@ -449,6 +450,8 @@ declare_syntax! {
         EnumValue -> [],
         /// `@rust-attr(...)`
         AtRustAttr -> [],
+        /// `interface I { ... }`
+        InterfaceDeclaration -> [DeclaredIdentifier],
     }
 }
 
