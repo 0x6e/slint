@@ -113,7 +113,7 @@ pub fn parse_component(p: &mut impl Parser) -> bool {
     let is_new_component = !simple_component && p.peek().as_str() == "component";
     if !is_global && !simple_component && !is_new_component {
         p.error(
-            "Parse error: expected a top-level item such as a component, a struct, or a global",
+            "Parse error: expected a top-level item such as a component, a struct, a global, or an interface",
         );
         return false;
     }
