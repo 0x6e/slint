@@ -451,7 +451,9 @@ declare_syntax! {
         /// `@rust-attr(...)`
         AtRustAttr -> [],
         /// `interface I { ... }`
-        InterfaceDeclaration -> [DeclaredIdentifier],
+        InterfaceDeclaration -> [DeclaredIdentifier, *InterfacePropertyDeclaration],
+        /// Declaration of a property in an interface - does not allow bindings.
+        InterfacePropertyDeclaration -> [ ?Type , DeclaredIdentifier ],
     }
 }
 
