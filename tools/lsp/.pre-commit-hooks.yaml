@@ -1,0 +1,7 @@
+-   id: slint-format
+    name: Slint Format
+    description: Format Slint files using the slint-lsp crate.
+    entry: slint-lsp
+    args: ['format', '-i']
+    language: rust
+    files: .slint
