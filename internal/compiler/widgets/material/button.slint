@@ -2,25 +2,25 @@
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
 import { StateLayer } from "components.slint";
-import { MaterialFontSettings, MaterialPalette, Elevation } from "styling.slint";
+import {
+    MaterialFontSettings,
+    MaterialPalette,
+    Elevation,
+} from "styling.slint";
 
-component MaterialButtonBase {
-    in property <string> text;
-    in property <image> icon;
-    in property <length> icon-size: 24px;
-    in property <length> border-radius <=> state-layer.border-radius;
-    in property <bool> checkable;
+import { ButtonInterface } from "../common/std-widget-interfaces.slint";
+
+component MaterialButtonBase implements ButtonInterface {
     in property <brush> text-color;
     in property <float> text-opacity;
-    in property <bool> colorize-icon;
-    in property <bool> enabled <=> state-layer.enabled;
     in property <length> layout-padding-left;
     in property <length> layout-padding-right;
-    out property <bool> has-focus <=> state-layer.has-focus;
-    out property <bool> pressed <=> state-layer.pressed;
-    in-out property <bool> checked;
+    in property <length> border-radius <=> state-layer.border-radius;
 
-    callback clicked <=> state-layer.clicked;
+    icon-size: 24px;
+    enabled <=> state-layer.enabled;
+    has-focus <=> state-layer.has-focus;
+    pressed <=> state-layer.pressed;
 
     min-width: layout.min-width;
     min-height: layout.min-height;
@@ -34,6 +34,12 @@ component MaterialButtonBase {
         ripple-color: MaterialPalette.secondary-ripple;
         checked-background: MaterialPalette.accent-background;
         focusable: true;
+        clicked => {
+            if root.checkable {
+                root.checked = !root.checked;
+            }
+            root.clicked();
+        }
     }
 
     layout := HorizontalLayout {
@@ -69,20 +75,7 @@ component MaterialButtonBase {
 }
 
 // Default button widget with Material Design Filled Button look and feel.
-export component Button {
-    in property <string> text <=> base.text;
-    in property <bool> enabled <=> base.enabled;
-    in property <bool> checkable;
-    in property <image> icon <=> base.icon;
-    in property <length> icon-size <=> base.icon-size;
-    in property <bool> primary;
-    in property <bool> colorize-icon <=> base.colorize-icon;
-    out property <bool> has-focus: base.has-focus;
-    out property <bool> pressed: self.enabled && base.pressed;
-    in-out property <bool> checked;
-
-    callback clicked;
-
+export component Button uses { ButtonInterface from base } {
     min-height: max(40px, layout.min-height);
     min-width: max(40px, layout.min-width);
     forward-focus: base;
@@ -125,13 +118,6 @@ export component Button {
             border-radius: background.border-radius;
             text-color: root.primary ? MaterialPalette.accent-foreground : MaterialPalette.control-foreground;
             text-opacity: 1.0;
-
-            clicked => {
-                if root.checkable {
-                    root.checked = !root.checked;
-                }
-                root.clicked();
-            }
         }
     }
 }
