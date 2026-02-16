@@ -21,6 +21,14 @@ component MaterialButtonBase implements ButtonInterface {
     enabled <=> state-layer.enabled;
     has-focus <=> state-layer.has-focus;
     pressed <=> state-layer.pressed;
+    accessible-role: button;
+    accessible-enabled: self.enabled;
+    accessible-checkable: self.checkable;
+    accessible-checked: self.checked;
+    accessible-label: self.text;
+    accessible-action-default => {
+        state-layer.clicked();
+    }
 
     min-width: layout.min-width;
     min-height: layout.min-height;
@@ -81,12 +89,12 @@ export component Button uses { ButtonInterface from base } {
     forward-focus: base;
 
     accessible-role: button;
-    accessible-enabled: root.enabled;
-    accessible-checkable: root.checkable;
-    accessible-checked: root.checked;
-    accessible-label: root.text;
+    accessible-enabled: base.accessible-enabled;
+    accessible-checkable: base.accessible-checkable;
+    accessible-checked: base.accessible-checked;
+    accessible-label: base.accessible-label;
     accessible-action-default => {
-        base.clicked();
+        base.accessible-action-default();
     }
 
     states [
