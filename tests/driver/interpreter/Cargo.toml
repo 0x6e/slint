@@ -17,6 +17,9 @@ publish = false
 path = "main.rs"
 name = "test-driver-interpreter"
 
+[target.'cfg(not(target_os = "wasm"))'.dependencies]
+i-slint-backend-qt = { workspace = true }
+
 [dev-dependencies]
 slint-interpreter = { workspace = true, features = ["display-diagnostics", "compat-1-2"] }
 i-slint-backend-testing = { workspace = true }

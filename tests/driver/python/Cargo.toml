@@ -21,6 +21,9 @@ name = "test-driver-python"
 spin_on = { workspace = true }
 tempfile = "3"
 
+[target.'cfg(not(target_os = "wasm"))'.dependencies]
+i-slint-backend-qt = { workspace = true }
+
 [dev-dependencies]
 test_driver_lib = { path = "../driverlib" }
 i-slint-compiler = { workspace = true, features = ["default", "python", "display-diagnostics", "bundle-translations"] }

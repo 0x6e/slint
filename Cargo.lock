@@ -10108,6 +10108,7 @@ name = "test-driver-cpp"
 version = "1.16.0"
 dependencies = [
  "cc",
+ "i-slint-backend-qt",
  "i-slint-compiler",
  "scopeguard",
  "slint-cpp",
@@ -10120,6 +10121,7 @@ dependencies = [
 name = "test-driver-interpreter"
 version = "1.16.0"
 dependencies = [
+ "i-slint-backend-qt",
  "i-slint-backend-testing",
  "i-slint-core",
  "itertools 0.14.0",
@@ -10132,6 +10134,7 @@ dependencies = [
 name = "test-driver-nodejs"
 version = "1.16.0"
 dependencies = [
+ "i-slint-backend-qt",
  "tempfile",
  "test_driver_lib",
  "which",
@@ -10141,6 +10144,7 @@ dependencies = [
 name = "test-driver-python"
 version = "1.16.0"
 dependencies = [
+ "i-slint-backend-qt",
  "i-slint-compiler",
  "spin_on",
  "tempfile",
@@ -10151,6 +10155,7 @@ dependencies = [
 name = "test-driver-rust"
 version = "1.16.0"
 dependencies = [
+ "i-slint-backend-qt",
  "i-slint-backend-testing",
  "i-slint-compiler",
  "slint",

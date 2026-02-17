@@ -16,6 +16,9 @@ publish = false
 path = "main.rs"
 name = "test-driver-nodejs"
 
+[target.'cfg(not(target_os = "wasm"))'.dependencies]
+i-slint-backend-qt = { workspace = true }
+
 [dev-dependencies]
 test_driver_lib = { path = "../driverlib" }
 # Require `artifact`  dependencies tracked by rust RFC 3028
