@@ -7,15 +7,14 @@ import { CosmicPalette, CosmicFontSettings, Icons } from "styling.slint";
 import { MenuBorder } from "./components.slint";
 import { StandardButton } from "../common/standardbutton.slint";
 
-import { Date, DatePickerBase } from "../common/datepicker_base.slint";
+import { DatePickerBase } from "../common/datepicker_base.slint";
+import {
+    Date,
+    DatePickerPopupInterface,
+} from "../common/std-widget-interfaces.slint";
 export { Date }
 
-export component DatePickerPopup inherits PopupWindow {
-    in property <string> title: "Select date";
-    in property <Date> date <=> base.date;
-
-    callback canceled();
-    callback accepted(date: Date);
+export component DatePickerPopup uses { DatePickerPopupInterface from base } inherits PopupWindow {
 
     width: dialog.width;
     height: dialog.height;
@@ -31,7 +30,6 @@ export component DatePickerPopup inherits PopupWindow {
         padding: 8px;
 
         base := DatePickerBase {
-            title: root.title;
             style: {
                   border-brush: CosmicPalette.border,
                   vertical-spacing: 8px,
