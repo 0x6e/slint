@@ -4,11 +4,7 @@
 import { ScrollView, LineEdit } from "std-widgets-impl.slint";
 import { StateLayer, IconButton, IconButtonStyle, SelectionButton, SelectionButtonStyle, ColoredTextStyle } from "./internal-components.slint";
 
-export struct Date {
-    year: int,
-    month: int,
-    day: int,
-}
+import { Date, DatePickerPopupInterface } from "std-widget-interfaces.slint";
 
 export struct CalendarDelegateStyle {
     font-size: length,
@@ -264,10 +260,10 @@ export struct DatePickerStyle {
     calendar-icon: image,
 }
 
-export component DatePickerBase {
-    in property <Date> date : { day: today[0], month: today[1], year: today[2] };
+export component DatePickerBase implements DatePickerPopupInterface {
+    date: { day: today[0], month: today[1], year: today[2] };
+
     in property <DatePickerStyle> style;
-    in property <string> title;
     in property <string> input-title: @tr("Enter date");
     in property <string> input-placeholder-text: "mm/dd/yyyy";
     in property <string> input-format: "%m/%d/%Y";

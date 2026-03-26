@@ -6,18 +6,16 @@ import { Button } from "./button.slint";
 import { Palette } from "./std-widgets-impl.slint";
 import { StandardButton } from "../common/standardbutton.slint";
 
-import { Date, DatePickerBase } from "../common/datepicker_base.slint";
+import { DatePickerBase } from "../common/datepicker_base.slint";
+import {
+    Date,
+    DatePickerPopupInterface,
+} from "../common/std-widget-interfaces.slint";
 export { Date }
 
-export component DatePickerPopup inherits PopupWindow  {
-    in property <string> title: "Select date";
-    in property <Date> date <=> base.date;
-
+export component DatePickerPopup uses { DatePickerPopupInterface from base } inherits PopupWindow {
     property <brush> state: Palette.color-scheme == ColorScheme.dark ? #ffffff : #000000;
     property <brush> state-secondary: Palette.color-scheme == ColorScheme.dark ? #000000 : #ffffff;
-
-    callback canceled();
-    callback accepted(date: Date);
 
     width: dialog.width;
     height: dialog.height;
@@ -35,7 +33,6 @@ export component DatePickerPopup inherits PopupWindow  {
         padding: 8px;
 
         base := DatePickerBase {
-            title: root.title;
             style: {
                   border-brush: Palette.border,
                   vertical-spacing: 8px,
