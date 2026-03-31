@@ -124,11 +124,40 @@ fn validate_property_declaration_for_interface(
     }
 }
 
-/// An ImplementsSpecifier and the corresponding interface element.
+/// How an interface is attached to an element: by a component's `implements` clause, or by a
+/// derived interface's `inherits` clause.
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub(super) enum InterfaceUseKind {
+    /// `component X implements I`
+    Implements,
+    /// `interface D inherits B`
+    Inherits,
+}
+
+/// A reference to an interface element, carrying the QualifiedName syntax node used to refer to it for use in
+/// diagnostics.
 pub(super) struct ImplementedInterface {
-    implements_specifier: syntax_nodes::ImplementsSpecifier,
+    interface_name_node: syntax_nodes::QualifiedName,
     interface: ElementRc,
     interface_name: SmolStr,
+    kind: InterfaceUseKind,
+}
+
+impl ImplementedInterface {
+    /// Construct an ImplementedInterface for a derived interface's `inherits` clause, given the
+    /// already-resolved parent interface Component.
+    pub(super) fn from_inherits(
+        interface_name_node: syntax_nodes::QualifiedName,
+        interface_component: Rc<Component>,
+    ) -> Self {
+        let interface_name = QualifiedTypeName::from_node(interface_name_node.clone()).to_smolstr();
+        Self {
+            interface_name_node,
+            interface: interface_component.root_element.clone(),
+            interface_name,
+            kind: InterfaceUseKind::Inherits,
+        }
+    }
 }
 
 /// If the element implements a valid interface, return the corresponding ImplementedInterface. Otherwise return None.
@@ -149,35 +178,36 @@ pub(super) fn get_implemented_interface(
         return None;
     }
 
-    let interface_name =
-        QualifiedTypeName::from_node(implements_specifier.QualifiedName()).to_smolstr();
+    let interface_name_node = implements_specifier.QualifiedName();
+    let interface_name = QualifiedTypeName::from_node(interface_name_node.clone()).to_smolstr();
 
     match e.base_type.lookup_type_for_child_element(&interface_name, tr) {
         Ok(ElementType::Component(c)) => {
             if !c.is_interface() {
                 diag.push_error(
                     format!("Cannot implement {}. It is not an interface", interface_name),
-                    &implements_specifier.QualifiedName(),
+                    &interface_name_node,
                 );
                 return None;
             }
 
             c.used.set(true);
             Some(ImplementedInterface {
-                implements_specifier,
+                interface_name_node,
                 interface: c.root_element.clone(),
                 interface_name,
+                kind: InterfaceUseKind::Implements,
             })
         }
         Ok(_) => {
             diag.push_error(
                 format!("Cannot implement {}. It is not an interface", interface_name),
-                &implements_specifier.QualifiedName(),
+                &interface_name_node,
             );
             None
         }
         Err(err) => {
-            diag.push_error(err, &implements_specifier.QualifiedName());
+            diag.push_error(err, &interface_name_node);
             None
         }
     }
@@ -190,27 +220,15 @@ pub(super) fn apply_properties(
     implemented_interface: &Option<ImplementedInterface>,
     diag: &mut BuildDiagnostics,
 ) {
-    let Some(ImplementedInterface { interface, implements_specifier, interface_name }) =
+    let Some(ImplementedInterface { interface, interface_name_node, interface_name, .. }) =
         implemented_interface
     else {
         return;
     };
-
-    for (unresolved_prop_name, prop_decl) in
-        interface.borrow().property_declarations.iter().filter(|(_, prop_decl)| {
-            // Functions are expected to be implemented manually, so we don't automatically add them.
-            !matches!(prop_decl.property_type, Type::Function { .. } | Type::Callback { .. })
-        })
-    {
-        apply_interface_property_declaration(
-            e,
-            unresolved_prop_name,
-            prop_decl,
-            implements_specifier,
-            interface_name,
-            diag,
-        );
-    }
+    apply_declarations(e, interface, interface_name_node, interface_name, diag, |prop_decl| {
+        // Functions are expected to be implemented manually, so we don't automatically add them.
+        !matches!(prop_decl.property_type, Type::Function { .. } | Type::Callback { .. })
+    });
 }
 
 /// Apply the callbacks declared in the interface to the element, emitting diagnostics if there are any conflicts.
@@ -220,23 +238,55 @@ pub(super) fn apply_callbacks(
     implemented_interface: &Option<ImplementedInterface>,
     diag: &mut BuildDiagnostics,
 ) {
-    let Some(ImplementedInterface { interface, implements_specifier, interface_name }) =
+    let Some(ImplementedInterface { interface, interface_name_node, interface_name, .. }) =
         implemented_interface
     else {
         return;
     };
+    apply_declarations(e, interface, interface_name_node, interface_name, diag, |prop_decl| {
+        matches!(prop_decl.property_type, Type::Callback { .. })
+    });
+}
 
+/// Apply the function declarations from an inherited parent interface to the derived interface.
+/// This is a no-op for `implements` - components are expected to implement functions manually.
+pub(super) fn apply_functions(
+    e: &mut Element,
+    implemented_interface: &Option<ImplementedInterface>,
+    diag: &mut BuildDiagnostics,
+) {
+    let Some(ImplementedInterface { interface, interface_name_node, interface_name, kind }) =
+        implemented_interface
+    else {
+        return;
+    };
+    if *kind == InterfaceUseKind::Implements {
+        return;
+    }
+    apply_declarations(e, interface, interface_name_node, interface_name, diag, |prop_decl| {
+        matches!(prop_decl.property_type, Type::Function { .. })
+    });
+}
+
+/// Shared iteration helper: applies each declaration in `interface` matching `filter` to `e`.
+fn apply_declarations<F>(
+    e: &mut Element,
+    interface: &ElementRc,
+    interface_name_node: &syntax_nodes::QualifiedName,
+    interface_name: &SmolStr,
+    diag: &mut BuildDiagnostics,
+    filter: F,
+) where
+    F: Fn(&PropertyDeclaration) -> bool,
+{
     for (unresolved_prop_name, prop_decl) in
-        interface.borrow().property_declarations.iter().filter(|(_, prop_decl)| {
-            // Functions are expected to be implemented manually, so we don't automatically add them.
-            matches!(prop_decl.property_type, Type::Callback { .. })
-        })
+        interface.borrow().property_declarations.iter().filter(|(_, prop_decl)| filter(prop_decl))
     {
         apply_interface_property_declaration(
             e,
             unresolved_prop_name,
             prop_decl,
-            implements_specifier,
+            interface_name_node,
             interface_name,
             diag,
         );
@@ -249,7 +299,7 @@ fn apply_interface_property_declaration(
     e: &mut Element,
     unresolved_prop_name: &SmolStr,
     prop_decl: &PropertyDeclaration,
-    implements_specifier: &syntax_nodes::ImplementsSpecifier,
+    interface_name_node: &syntax_nodes::QualifiedName,
     interface_name: &SmolStr,
     diag: &mut BuildDiagnostics,
 ) {
@@ -310,7 +360,7 @@ fn apply_interface_property_declaration(
         &e.base_type,
         &interface_name,
     ) {
-        diag.push_error(message, &implements_specifier.QualifiedName());
+        diag.push_error(message, interface_name_node);
         return;
     }
 
@@ -369,11 +419,17 @@ pub(super) fn validate_function_implementations(
     implemented_interface: &Option<ImplementedInterface>,
     diag: &mut BuildDiagnostics,
 ) {
-    let Some(ImplementedInterface { interface, implements_specifier, interface_name }) =
+    let Some(ImplementedInterface { interface, interface_name_node, interface_name, kind }) =
         implemented_interface
     else {
         return;
     };
+
+    // Inherited interfaces propagate function declarations without bodies, so there's nothing to
+    // validate — the implementing component must provide the bodies.
+    if *kind == InterfaceUseKind::Inherits {
+        return;
+    }
 
     for (function_name, function_property_decl) in interface
         .borrow()
@@ -393,12 +449,12 @@ pub(super) fn validate_function_implementations(
                     .get(function_name)
                     .and_then(|decl| decl.node.clone())
                     .map_or_else(
-                        || parser::NodeOrToken::Node(implements_specifier.QualifiedName().into()),
+                        || parser::NodeOrToken::Node(interface_name_node.clone().into()),
                         parser::NodeOrToken::Node,
                     );
                 diag.push_error(error, &source);
             } else {
-                diag.push_error(error, &implements_specifier.QualifiedName());
+                diag.push_error(error, interface_name_node);
             }
         };
 
@@ -407,7 +463,7 @@ pub(super) fn validate_function_implementations(
             Type::Invalid => {
                 diag.push_error(
                     format!("Missing implementation of function '{}'", function_name),
-                    &implements_specifier.QualifiedName(),
+                    interface_name_node,
                 );
                 None
             }
