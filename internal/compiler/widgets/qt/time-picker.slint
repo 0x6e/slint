@@ -1,7 +1,11 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
-import { Time, TimePickerBase } from "../common/time-picker-base.slint";
+import { TimePickerBase } from "../common/time-picker-base.slint";
+import {
+    Time,
+    TimePickerPopupInterface,
+} from "../common/std-widget-interfaces.slint";
 import { VerticalBox } from "../common/layout.slint";
 import { Button } from "./button.slint";
 import { Palette } from "./std-widgets-impl.slint";
@@ -10,14 +14,7 @@ import { StandardButton } from "../common/standardbutton.slint";
 
 export { Time }
 
-export component TimePickerPopup inherits PopupWindow {
-    in property <bool> use-24-hour-format <=> base.use-24-hour-format;
-    in property <string> title: "Select time";
-    in property <Time> time <=> base.time;
-
-    callback canceled();
-    callback accepted(/* current-time */ Time);
-
+export component TimePickerPopup uses { TimePickerPopupInterface from base } inherits PopupWindow {
     width: dialog.width;
     height: dialog.height;
 
@@ -34,7 +31,6 @@ export component TimePickerPopup inherits PopupWindow {
         padding: 8px;
 
         base := TimePickerBase {
-            title: root.title;
             style: {
                 foreground: Palette.foreground,
                 vertical-spacing: 8px,

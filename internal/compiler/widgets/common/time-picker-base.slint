@@ -3,6 +3,8 @@
 
 import { ColoredTextStyle } from "./internal-components.slint";
 
+import { Time, TimePickerPopupInterface } from "std-widget-interfaces.slint";
+
 export struct TimeSelectorStyle {
     foreground: brush,
     foreground-selected: brush,
@@ -329,12 +331,6 @@ export component PeriodSelector {
     }
 }
 
-export struct Time {
-    hour: int,
-    minute: int,
-    second: int
-}
-
 export struct TimePickerStyle {
     foreground: brush,
     horizontal-spacing: length,
@@ -345,12 +341,11 @@ export struct TimePickerStyle {
     title-style: ColoredTextStyle,
 }
 
-export component TimePickerBase {
-    in property <bool> use-24-hour-format: SlintInternal.use-24-hour-format;
+export component TimePickerBase implements TimePickerPopupInterface {
+    time: { hour: 12 };
+
     in property <bool> selection-mode: true;
     in property <TimePickerStyle> style;
-    in property <Time> time: { hour: 12 };
-    in property <string> title;
 
     property <bool> minutes-selected;
     property <bool> am-selected: true;
