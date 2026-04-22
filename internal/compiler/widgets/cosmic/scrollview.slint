@@ -4,6 +4,10 @@
 import { CosmicPalette, Icons } from "styling.slint";
 import { StateLayerBase } from "components.slint";
 
+import {
+    ScrollViewInterface,
+} from "../common/std-widget-interfaces.slint";
+
 export component ScrollBar {
     in property <bool> enabled;
     out property <bool> has-hover: touch-area.has-hover;
@@ -94,22 +98,16 @@ export component ScrollBar {
     }
 }
 
-export component ScrollView {
-    in property <bool> enabled: true;
-    out property <length> visible-width <=> flickable.width;
-    out property <length> visible-height <=> flickable.height;
-    in-out property <length> viewport-width <=> flickable.viewport-width;
-    in-out property <length> viewport-height <=> flickable.viewport-height;
-    in-out property <length> viewport-x <=> flickable.viewport-x;
-    in-out property <length> viewport-y <=> flickable.viewport-y;
-    in property <ScrollBarPolicy> vertical-scrollbar-policy <=> vertical-bar.policy;
-    in property <ScrollBarPolicy> horizontal-scrollbar-policy <=> horizontal-bar.policy;
-    in property <bool> mouse-drag-pan-enabled <=> flickable.interactive;
-
-    // FIXME: remove. This property is currently set by the ListView and is used by the native style to draw the scrollbar differently when it has focus
-    in-out property <bool> has-focus;
-
-    callback scrolled <=> flickable.flicked;
+export component ScrollView implements ScrollViewInterface {
+    visible-width <=> flickable.width;
+    visible-height <=> flickable.height;
+    viewport-width <=> flickable.viewport-width;
+    viewport-height <=> flickable.viewport-height;
+    viewport-x <=> flickable.viewport-x;
+    viewport-y <=> flickable.viewport-y;
+    vertical-scrollbar-policy <=> vertical-bar.policy;
+    horizontal-scrollbar-policy <=> horizontal-bar.policy;
+    mouse-drag-pan-enabled <=> flickable.interactive;
 
     min-height: 50px;
     min-width: 50px;
@@ -124,6 +122,10 @@ export component ScrollView {
         viewport-x <=> horizontal-bar.value;
         width: 100%;
         height: 100%;
+
+        flicked => {
+            root.scrolled();
+        }
 
         @children
     }

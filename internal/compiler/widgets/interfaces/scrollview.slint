@@ -1,0 +1,19 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>, Copyright © 2026 Klarälvdalens Datakonsult AB, a KDAB Group company <info@kdab.com>, author Nathan Collins <nathan.collins@kdab.com>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+export interface ScrollView {
+    in property <bool> enabled: true;
+    in property <bool> mouse-drag-pan-enabled: false;
+    // FIXME: remove. This property is currently set by the ListView and is used by the native style to draw the scrollbar differently when it has focus
+    in-out property <bool> has-focus: false;
+    in-out property <length> viewport-width: 0px;
+    in-out property <length> viewport-height: 0px;
+    in-out property <length> viewport-x: 0px;
+    in-out property <length> viewport-y: 0px;
+    out property <length> visible-width: 0px;
+    out property <length> visible-height: 0px;
+    in property <ScrollBarPolicy> vertical-scrollbar-policy: as-needed;
+    in property <ScrollBarPolicy> horizontal-scrollbar-policy: as-needed;
+
+    callback scrolled();
+}
