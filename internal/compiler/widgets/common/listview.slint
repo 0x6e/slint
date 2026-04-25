@@ -2,20 +2,17 @@
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
 import { ListItem, ScrollView } from "std-widgets-impl.slint";
-import { ListViewInterface } from "./std-widget-interfaces.slint";
+import {
+    ListViewInterface,
+    StandardListViewInterface,
+} from "./std-widget-interfaces.slint";
 
 export component ListView implements ListViewInterface inherits ScrollView {
     @children
     accessible-role: list;
 }
 
-component StandardListViewBase inherits ListView {
-    in property <[StandardListViewItem]> model;
-    in-out property <int> current-item: -1;
-
-    callback current-item-changed(current-item: int);
-    callback item-pointer-event(item: int, event: PointerEvent, position: Point);
-
+component StandardListViewBase implements StandardListViewInterface inherits ListView {
     public function set-current-item(index: int) {
         if index < 0 || index >= model.length || index == root.current-item {
             return;
