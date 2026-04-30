@@ -1,0 +1,18 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>, Copyright © 2026 Klarälvdalens Datakonsult AB, a KDAB Group company <info@kdab.com>, author Nathan Collins <nathan.collins@kdab.com>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+import { ListView } from "./listview.slint";
+
+export interface StandardTableView inherits ListView {
+    out property <int> current-sort-column: -1;
+    in-out property <[TableColumn]> columns;
+    in property <[[StandardListViewItem]]> rows;
+    in-out property <int> current-row: -1;
+
+    callback sort-ascending(column: int);
+    callback sort-descending(column: int);
+    callback row-pointer-event(row: int, event: PointerEvent, position: Point);
+    callback current-row-changed(current-row: int);
+
+    public function set-current-row(index: int);
+}
