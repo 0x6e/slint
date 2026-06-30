@@ -7,6 +7,7 @@ import { CheckBoxInterface } from "../common/std-widget-interfaces.slint";
 
 // Selection control that can be toggled between checked und unchecked by click.
 export component CheckBox implements CheckBoxInterface {
+    enabled: true;
     text <=> i-text.text;
     font-size: MaterialFontSettings.title-small.font-size;
     font-weight: MaterialFontSettings.title-small.font-weight;

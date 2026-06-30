@@ -4,9 +4,6 @@
 import { CheckBoxInterface } from "../common/std-widget-interfaces.slint";
 
 export component CheckBox implements CheckBoxInterface inherits NativeCheckBox {
-    in property <length> font-size; // not implemented
-    in property <int> font-weight; // not implemented
-
     accessible-enabled: root.enabled;
     accessible-checkable: true;
     accessible-checked <=> root.checked;
