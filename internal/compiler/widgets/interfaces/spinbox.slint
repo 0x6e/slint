@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
 export interface SpinBox {
-    in property <bool> enabled: true;
-    out property <bool> has-focus: false;
-    in-out property <int> value: minimum;
-    in property <int> minimum: 0;
-    in property <int> maximum: 100;
-    in property <bool> read-only: false;
-    in property <int> step-size: 1;
-    in property <TextHorizontalAlignment> horizontal-alignment: left;
+    in property <bool> enabled;
+    out property <bool> has-focus;
+    in-out property <int> value;
+    in property <int> minimum;
+    in property <int> maximum;
+    in property <bool> read-only;
+    in property <int> step-size;
+    in property <TextHorizontalAlignment> horizontal-alignment;
 
     callback edited(value: int);
 }

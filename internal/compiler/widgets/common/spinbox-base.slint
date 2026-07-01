@@ -8,8 +8,15 @@ export component SpinBoxBase implements SpinBoxInterface {
     in property <int> font-weight <=> text-input.font-weight;
     in property <color> selection-background-color <=> text-input.selection-background-color;
     in property <color> selection-foreground-color <=> text-input.selection-foreground-color;
-    horizontal-alignment <=> text-input.horizontal-alignment;
+
+    enabled: true;
     has-focus <=> text-input.has-focus;
+    value: minimum;
+    minimum: 0;
+    maximum: 100;
+    read-only: false;
+    step-size: 1;
+    horizontal-alignment <=> text-input.horizontal-alignment;
 
     public function update-value(value: int) {
         if root.value == value || (value >= root.minimum && value <= root.maximum) {
