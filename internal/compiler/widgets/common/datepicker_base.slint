@@ -261,6 +261,7 @@ export struct DatePickerStyle {
 }
 
 export component DatePickerBase implements DatePickerPopupInterface {
+    title: "Select date";
     date: { day: today[0], month: today[1], year: today[2] };
 
     in property <DatePickerStyle> style;

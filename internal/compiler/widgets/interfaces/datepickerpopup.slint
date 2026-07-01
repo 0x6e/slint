@@ -8,7 +8,7 @@ export struct Date {
 }
 
 export interface DatePickerPopup {
-    in property <string> title: "Select date";
+    in property <string> title;
     in property <Date> date;
 
     callback canceled();
