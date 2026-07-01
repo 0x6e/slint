@@ -4,6 +4,12 @@ import { SliderInterface } from "./std-widget-interfaces.slint";
 
 export component SliderBase implements SliderInterface {
     enabled <=> touch-area.enabled;
+    value: minimum;
+    step: 1;
+    minimum: 0;
+    maximum: 100;
+    orientation: Orientation.horizontal;
+
     in property <length> handle-x;
     in property <length> handle-y;
     in property <length> handle-width;
