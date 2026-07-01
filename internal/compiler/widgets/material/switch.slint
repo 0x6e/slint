@@ -6,6 +6,7 @@ import { MaterialPalette, MaterialFontSettings } from "styling.slint";
 import { SwitchInterface } from "../common/std-widget-interfaces.slint";
 
 export component Switch implements SwitchInterface {
+    enabled: true;
     text <=> i-label.text;
     has-focus: i-focus-scope.has-focus;
 

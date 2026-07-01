@@ -7,6 +7,7 @@ import { StateLayer } from "components.slint";
 import { SwitchInterface } from "../common/std-widget-interfaces.slint";
 
 export component Switch implements SwitchInterface {
+    enabled: true;
     has-focus: state-layer.has-focus;
 
     private property <color> text-color: CosmicPalette.foreground;
