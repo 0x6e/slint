@@ -3,6 +3,7 @@
 import { ComboBoxInterface } from "./std-widget-interfaces.slint";
 
 export component ComboBoxBase implements ComboBoxInterface {
+    current-value: root.model[root.current-index];
     enabled <=> i-focus-scope.enabled;
     has-focus: (i-focus-scope.has-focus || popup-has-focus) && root.enabled;
 
