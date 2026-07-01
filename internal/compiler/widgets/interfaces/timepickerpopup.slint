@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
 
-export struct Time { hour: int, minute: int, second: int}
+export struct Time { hour: int, minute: int, second: int }
 
 export interface TimePickerPopup {
-    in property <bool> use-24-hour-format: SlintInternal.use-24-hour-format;
-    in property <string> title: "Select time";
-    in property <Time> time: { hour: 12 };
+    in property <bool> use-24-hour-format;
+    in property <string> title;
+    in property <Time> time;
 
     callback canceled();
     callback accepted(date: Time);

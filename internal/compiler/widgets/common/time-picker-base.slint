@@ -342,6 +342,8 @@ export struct TimePickerStyle {
 }
 
 export component TimePickerBase implements TimePickerPopupInterface {
+    use-24-hour-format: SlintInternal.use-24-hour-format;
+    title: "Select time";
     time: { hour: 12 };
 
     in property <bool> selection-mode: true;
