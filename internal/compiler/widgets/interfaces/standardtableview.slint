@@ -4,10 +4,10 @@
 import { ListView } from "./listview.slint";
 
 export interface StandardTableView inherits ListView {
-    out property <int> current-sort-column: -1;
+    out property <int> current-sort-column;
     in-out property <[TableColumn]> columns;
     in property <[[StandardListViewItem]]> rows;
-    in-out property <int> current-row: -1;
+    in-out property <int> current-row;
 
     callback sort-ascending(column: int);
     callback sort-descending(column: int);

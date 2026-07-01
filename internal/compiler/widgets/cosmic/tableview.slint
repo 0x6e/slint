@@ -129,6 +129,8 @@ component TableViewRow inherits Rectangle {
 }
 
 export component StandardTableView implements StandardTableViewInterface {
+    current-sort-column: -1;
+    current-row: -1;
     enabled <=> scroll-view.enabled;
     visible-width <=> scroll-view.visible-width;
     visible-height <=> scroll-view.visible-height;

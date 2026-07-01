@@ -121,6 +121,8 @@ export component StandardTableView implements StandardTableViewInterface {
     private property <length> current-item-y: scroll-view.viewport-y + current-row * item-height;
     private property <length> min-header-height: 42px;
 
+    current-sort-column: -1;
+    current-row: -1;
     enabled <=> scroll-view.enabled;
     visible-width <=> scroll-view.visible-width;
     visible-height <=> scroll-view.visible-height;
