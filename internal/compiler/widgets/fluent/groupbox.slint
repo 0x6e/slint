@@ -6,6 +6,8 @@ import { FluentFontSettings, FluentPalette } from "styling.slint";
 import { GroupBoxInterface } from "../common/std-widget-interfaces.slint";
 
 export component GroupBox implements GroupBoxInterface {
+    enabled: true;
+
     accessible-role: groupbox;
     accessible-label: root.title;
     accessible-enabled: root.enabled;
