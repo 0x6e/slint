@@ -16,6 +16,7 @@ use crate::langtype::{
 use crate::langtype::{ElementType, PropertyLookupResult};
 use crate::layout::{LayoutConstraints, Orientation};
 use crate::namedreference::NamedReference;
+use crate::object_tree::interfaces::ImplementedInterface;
 use crate::parser;
 use crate::parser::{SyntaxKind, SyntaxNode, syntax_nodes};
 use crate::typeloader::{ImportKind, ImportedTypes, LibraryInfo};
@@ -934,6 +935,9 @@ pub struct Element {
     ///
     /// The order in the list is first the parent, and then the removed children.
     pub debug: Vec<ElementDebugInfo>,
+
+    /// The interfaces that this element implements with an explicit `implements` keyword.
+    pub implemented_interfaces: BTreeMap<SmolStr, ImplementedInterface>,
 }
 
 impl Spanned for Element {
@@ -1043,6 +1047,10 @@ pub fn pretty_print(
     if let Some(g) = &e.geometry_props {
         indent!();
         writeln!(f, "geometry {g:?} ")?;
+    }
+    for name in e.implemented_interfaces.keys() {
+        indent!();
+        writeln!(f, "implements {name}")?;
     }
 
     /*if let Type::Component(base) = &e.base_type {

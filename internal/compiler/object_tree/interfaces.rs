@@ -136,7 +136,8 @@ pub(super) enum InterfaceUseKind {
 
 /// A reference to an interface element, carrying the QualifiedName syntax node used to refer to it for use in
 /// diagnostics.
-pub(super) struct ImplementedInterface {
+#[derive(Clone)]
+pub struct ImplementedInterface {
     interface_name_node: syntax_nodes::QualifiedName,
     interface: ElementRc,
     interface_name: SmolStr,

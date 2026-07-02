@@ -69,6 +69,7 @@ pub fn ensure_window(
 
         inline_depth: 0,
         is_legacy_syntax: false,
+        implemented_interfaces: Default::default(),
     };
     let new_root = new_root.make_rc();
     win_elem_mut.children.push(new_root.clone());
