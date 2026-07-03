@@ -1421,6 +1421,12 @@ impl Element {
         // We should never have both at the same time.
         debug_assert!(!(implemented_interface.is_some() && inherited_interface.is_some()));
         let implemented_interface = implemented_interface.or(inherited_interface);
+        if let Some(implemented_interface) = &implemented_interface {
+            r.implemented_interfaces.insert(
+                implemented_interface.canonical_name.clone(),
+                implemented_interface.clone(),
+            );
+        }
         interfaces::apply_properties(&mut r, &implemented_interface, diag);
 
         for (prop_name, csn, source) in property_bindings {
@@ -2442,6 +2448,13 @@ impl Element {
             },
         );
         infos
+    }
+
+    /// Returns true if this Element or its base types implement `interface_name`.
+    /// `interface_name` is expected to be the original name of the interface, not an alias.
+    pub fn implements_interface(&self, interface_name: &str) -> bool {
+        self.implemented_interfaces.contains_key(interface_name)
+            || self.base_type.implements_interface(interface_name)
     }
 }
 

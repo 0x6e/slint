@@ -142,7 +142,7 @@ pub struct ImplementedInterface {
     interface: ElementRc,
     interface_name: SmolStr,
     /// The interface's original name, prior to any import/export-as aliasing.
-    canonical_name: SmolStr,
+    pub(super) canonical_name: SmolStr,
     kind: InterfaceUseKind,
 }
 
@@ -672,11 +672,18 @@ fn gather_valid_uses_statements(
             continue;
         };
 
-        let interface = interface_component.root_element.clone();
-        if !element_implements_interface(&child, &interface, &uses_statement, diag) {
+        if !child.borrow().implements_interface(&interface_component.id) {
+            diag.push_error(
+                format!(
+                    "'{}' does not implement '{}'",
+                    uses_statement.child_id, uses_statement.interface_name
+                ),
+                &uses_statement.child_id_node(),
+            );
             continue;
         }
 
+        let interface = interface_component.root_element.clone();
         valid_uses_statements.push(ValidUsesStatement { uses_statement, interface, child });
     }
     valid_uses_statements
@@ -723,35 +730,6 @@ fn filter_conflicting_uses_statements(
         })
         .collect();
     valid_uses_statements
-}
-
-/// Check that the given element implements the given interface. Emits a diagnostic if the interface is not implemented.
-fn element_implements_interface(
-    element: &ElementRc,
-    interface: &ElementRc,
-    uses_statement: &UsesStatement,
-    diag: &mut BuildDiagnostics,
-) -> bool {
-    let mut valid = true;
-    let mut check = |property_name: &SmolStr, property_declaration: &PropertyDeclaration| {
-        let lookup_result = element.borrow().lookup_property(property_name);
-        if let Err(e) = property_matches_interface(&lookup_result, property_declaration) {
-            diag.push_error(
-                format!(
-                    "'{}' does not implement '{}' from '{}' - {}",
-                    uses_statement.child_id, property_name, uses_statement.interface_name, e
-                ),
-                &uses_statement.child_id_node(),
-            );
-            valid = false;
-        }
-    };
-
-    for (property_name, property_declaration) in interface.borrow().property_declarations.iter() {
-        check(property_name, property_declaration);
-    }
-
-    valid
 }
 
 /// Check that the given property matches the declaration from the interface. Emits a diagnostic if it doesn't match.
