@@ -1,23 +1,25 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
+import { ScrollViewInterface } from "../common/std-widget-interfaces.slint";
+
 export { NativeStyleMetrics as StyleMetrics }
 
 // This internal ScrollView has some additional properties, used by the
 // StandardTableView, which are not currently exposed by the public ScrollView
 // (since then it would need to be done for all styles).
-export component InternalScrollView {
-    in-out property <length> viewport-width <=> fli.viewport-width;
-    in-out property <length> viewport-height <=> fli.viewport-height;
-    in-out property <length> viewport-x <=> fli.viewport-x;
-    in-out property <length> viewport-y <=> fli.viewport-y;
-    out property <length> visible-width <=> fli.width;
-    out property <length> visible-height <=> fli.height;
-    in-out property <bool> has-focus <=> native.has-focus;
-    in property <bool> enabled <=> native.enabled;
-    in property <ScrollBarPolicy> vertical-scrollbar-policy <=> native.vertical-scrollbar-policy;
-    in property <ScrollBarPolicy> horizontal-scrollbar-policy <=> native.horizontal-scrollbar-policy;
-    in property <bool> mouse-drag-pan-enabled <=> fli.interactive;
+export component InternalScrollView implements ScrollViewInterface {
+    viewport-width <=> fli.viewport-width;
+    viewport-height <=> fli.viewport-height;
+    viewport-x <=> fli.viewport-x;
+    viewport-y <=> fli.viewport-y;
+    visible-width <=> fli.width;
+    visible-height <=> fli.height;
+    has-focus <=> native.has-focus;
+    enabled <=> native.enabled;
+    vertical-scrollbar-policy <=> native.vertical-scrollbar-policy;
+    horizontal-scrollbar-policy <=> native.horizontal-scrollbar-policy;
+    mouse-drag-pan-enabled <=> fli.interactive;
 
     // Used by the StandardTableView
     out property <length> native-padding-left: native.native-padding-left;
@@ -25,8 +27,6 @@ export component InternalScrollView {
     out property <length> native-padding-top: native.native-padding-top;
     out property <length> native-padding-bottom: native.native-padding-bottom;
     in property <length> header-height: 0;
-
-    callback scrolled <=> fli.flicked;
 
     preferred-height: 100%;
     preferred-width: 100%;
@@ -53,6 +53,8 @@ export component InternalScrollView {
         interactive: false;
         viewport-y <=> native.vertical-value;
         viewport-x <=> native.horizontal-value;
+
+        flicked => root.scrolled();
     }
 }
 
