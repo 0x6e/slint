@@ -3,6 +3,8 @@
 
 import { ButtonInterface } from "../common/std-widget-interfaces.slint";
 
+component QtButton implements ButtonInterface inherits NativeButton { }
+
 export component Button uses { ButtonInterface from native } {
     accessible-role: button;
     accessible-enabled: root.enabled;
@@ -19,7 +21,7 @@ export component Button uses { ButtonInterface from native } {
     forward-focus: native;
 
     HorizontalLayout {
-        native := NativeButton {
+        native := QtButton {
             checkable: false;
             enabled: true;
         }
