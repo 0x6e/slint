@@ -2454,6 +2454,9 @@ impl Element {
     /// `interface_name` is expected to be the original name of the interface, not an alias.
     pub fn implements_interface(&self, interface_name: &str) -> bool {
         self.implemented_interfaces.contains_key(interface_name)
+            || self.implemented_interfaces.values().any(|implemented| {
+                implemented.interface.borrow().implements_interface(interface_name)
+            })
             || self.base_type.implements_interface(interface_name)
     }
 }

@@ -139,7 +139,8 @@ pub(super) enum InterfaceUseKind {
 #[derive(Clone)]
 pub struct ImplementedInterface {
     interface_name_node: syntax_nodes::QualifiedName,
-    interface: ElementRc,
+    /// The original interface declaration.
+    pub(super) interface: ElementRc,
     interface_name: SmolStr,
     /// The interface's original name, prior to any import/export-as aliasing.
     pub(super) canonical_name: SmolStr,
