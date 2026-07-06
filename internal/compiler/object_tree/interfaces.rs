@@ -141,6 +141,8 @@ pub struct ImplementedInterface {
     interface_name_node: syntax_nodes::QualifiedName,
     interface: ElementRc,
     interface_name: SmolStr,
+    /// The interface's original name, prior to any import/export-as aliasing.
+    canonical_name: SmolStr,
     kind: InterfaceUseKind,
 }
 
@@ -156,6 +158,7 @@ impl ImplementedInterface {
             interface_name_node,
             interface: interface_component.root_element.clone(),
             interface_name,
+            canonical_name: interface_component.id.clone(),
             kind: InterfaceUseKind::Inherits,
         }
     }
@@ -200,6 +203,7 @@ pub(super) fn get_implemented_interface(
                 interface_name_node,
                 interface: c.root_element.clone(),
                 interface_name,
+                canonical_name: c.id.clone(),
                 kind: InterfaceUseKind::Implements,
             })
         }
@@ -259,7 +263,7 @@ pub(super) fn apply_functions(
     implemented_interface: &Option<ImplementedInterface>,
     diag: &mut BuildDiagnostics,
 ) {
-    let Some(ImplementedInterface { interface, interface_name_node, interface_name, kind }) =
+    let Some(ImplementedInterface { interface, interface_name_node, interface_name, kind, .. }) =
         implemented_interface
     else {
         return;
@@ -428,7 +432,7 @@ pub(super) fn validate_function_implementations(
     implemented_interface: &Option<ImplementedInterface>,
     diag: &mut BuildDiagnostics,
 ) {
-    let Some(ImplementedInterface { interface, interface_name_node, interface_name, kind }) =
+    let Some(ImplementedInterface { interface, interface_name_node, interface_name, kind, .. }) =
         implemented_interface
     else {
         return;
