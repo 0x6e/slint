@@ -67,6 +67,7 @@ fn create_repeater_components(component: &Rc<Component>) {
                 is_legacy_syntax: original_elem.is_legacy_syntax,
                 inline_depth: 0,
                 grid_layout_cell: original_elem.grid_layout_cell.clone(),
+                implemented_interfaces: original_elem.implemented_interfaces.clone(),
             })),
             parent_element: RefCell::new(Weak::clone(&original_elem_as_weak)),
             ..Component::default()

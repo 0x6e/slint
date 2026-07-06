@@ -16,6 +16,7 @@ use crate::langtype::{
 use crate::langtype::{ElementType, PropertyLookupResult};
 use crate::layout::{LayoutConstraints, Orientation};
 use crate::namedreference::NamedReference;
+use crate::object_tree::interfaces::ImplementedInterface;
 use crate::parser;
 use crate::parser::{SyntaxKind, SyntaxNode, syntax_nodes};
 use crate::typeloader::{ImportKind, ImportedTypes, LibraryInfo};
@@ -934,6 +935,9 @@ pub struct Element {
     ///
     /// The order in the list is first the parent, and then the removed children.
     pub debug: Vec<ElementDebugInfo>,
+
+    /// The interfaces that this element implements with an explicit `implements` keyword.
+    pub implemented_interfaces: BTreeMap<SmolStr, ImplementedInterface>,
 }
 
 impl Spanned for Element {
@@ -1043,6 +1047,10 @@ pub fn pretty_print(
     if let Some(g) = &e.geometry_props {
         indent!();
         writeln!(f, "geometry {g:?} ")?;
+    }
+    for name in e.implemented_interfaces.keys() {
+        indent!();
+        writeln!(f, "implements {name}")?;
     }
 
     /*if let Type::Component(base) = &e.base_type {
@@ -1413,6 +1421,12 @@ impl Element {
         // We should never have both at the same time.
         debug_assert!(!(implemented_interface.is_some() && inherited_interface.is_some()));
         let implemented_interface = implemented_interface.or(inherited_interface);
+        if let Some(implemented_interface) = &implemented_interface {
+            r.implemented_interfaces.insert(
+                implemented_interface.canonical_name.clone(),
+                implemented_interface.clone(),
+            );
+        }
         interfaces::apply_properties(&mut r, &implemented_interface, diag);
 
         for (prop_name, csn, source) in property_bindings {
@@ -2434,6 +2448,16 @@ impl Element {
             },
         );
         infos
+    }
+
+    /// Returns true if this Element or its base types implement `interface_name`.
+    /// `interface_name` is expected to be the original name of the interface, not an alias.
+    pub fn implements_interface(&self, interface_name: &str) -> bool {
+        self.implemented_interfaces.contains_key(interface_name)
+            || self.implemented_interfaces.values().any(|implemented| {
+                implemented.interface.borrow().implements_interface(interface_name)
+            })
+            || self.base_type.implements_interface(interface_name)
     }
 }
 

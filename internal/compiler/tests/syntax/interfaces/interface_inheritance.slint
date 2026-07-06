@@ -51,3 +51,21 @@ export component ComponentsCannotInheritInterfaces1 inherits InterfaceA { }
 
 export component ComponentsCannotInheritInterfaces2 inherits InterfaceB { }
 //                                                           >         <error{Components cannot inherit from interfaces}
+
+export interface InterfaceC inherits InterfaceB {
+    out property <length> bar;
+}
+
+export component InnerComponent implements InterfaceC {
+    public pure function function-a() {
+        debug("Function A called");
+    }
+
+    public pure function function-b() {
+        debug("Function B called");
+    }
+}
+
+export component UseBaseInterface uses { InterfaceA from inner } {
+    inner := InnerComponent {}
+}

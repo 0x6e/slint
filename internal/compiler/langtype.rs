@@ -666,6 +666,17 @@ impl ElementType {
             ElementType::Interface => None,
         }
     }
+
+    /// Returns true if this is a Component and it or its base type implements `interface_name`.
+    /// `interface_name` is expected to be the original name of the interface, not an alias.
+    pub fn implements_interface(&self, interface_name: &str) -> bool {
+        match self {
+            ElementType::Component(component) => {
+                component.root_element.borrow().implements_interface(interface_name)
+            }
+            _ => false,
+        }
+    }
 }
 
 impl Display for ElementType {
