@@ -430,6 +430,7 @@ fn duplicate_element_with_mapping(
             .grid_layout_cell
             .as_ref()
             .map(|cell| Rc::new(RefCell::new(cell.borrow().clone()))),
+        implemented_interfaces: elem.implemented_interfaces.clone(),
     }));
     mapping.insert(element_key(element.clone()), new.clone());
     if let ElementType::Component(c) = &mut new.borrow_mut().base_type
