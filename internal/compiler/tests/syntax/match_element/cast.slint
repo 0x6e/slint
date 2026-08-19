@@ -68,3 +68,18 @@ export component CastWithWildcard {
         *: Rectangle { }
     }
 }
+
+export component ColorCast {
+    in property <color> chosen-color: Colors.lightsteelblue;
+
+    match chosen-color {
+        #ff0000: Text { text: "red literal"; }
+        Colors.red: Text { text: "fully-qualified named color"; }
+//      >        <error{Duplicate case value}
+        red: Text { text: "type-based lookup named color"; }
+//      > <error{Duplicate case value}
+        Colors.lightsteelblue: Text { text: "light steel blue"; }
+        black: Text { text: "black"; }
+        *: {}
+    }
+}
