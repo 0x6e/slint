@@ -1806,6 +1806,11 @@ impl TypeLoader {
                     || referencing_file.is_some_and(|x| x.starts_with("builtin:/")))
                 .then(|| format!("builtin:/{}", self.resolved_style).into()),
             )
+            .chain(
+                (file_to_import == "std-widget-interfaces.slint"
+                    && self.compiler_config.enable_experimental)
+                    .then(|| PathBuf::from("builtin:/common")),
+            )
             .find_map(|include_dir| {
                 let candidate = crate::pathutils::join(&include_dir, Path::new(file_to_import))?;
                 crate::fileaccess::load_file(&candidate)
@@ -2389,6 +2394,27 @@ fn test_manual_import() {
 
     assert!(!build_diagnostics.has_errors());
     assert!(maybe_button_type.is_some());
+}
+
+#[test]
+fn test_import_widget_interfaces() {
+    for enable_experimental in [false, true] {
+        let mut compiler_config =
+            CompilerConfiguration::new(crate::generator::OutputFormat::Interpreter);
+        compiler_config.style = Some("fluent".into());
+        compiler_config.enable_experimental = enable_experimental;
+        let mut build_diagnostics = BuildDiagnostics::default();
+        let mut loader = TypeLoader::new(compiler_config, &mut build_diagnostics);
+
+        let interface = spin_on::spin_on(loader.import_component(
+            "std-widget-interfaces.slint",
+            "ButtonInterface",
+            &mut build_diagnostics,
+        ));
+
+        assert_eq!(interface.is_some(), enable_experimental);
+        assert_eq!(build_diagnostics.has_errors(), !enable_experimental);
+    }
 }
 
 #[test]
