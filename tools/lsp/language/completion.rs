@@ -333,6 +333,7 @@ pub(crate) fn completion_at(
                         &token,
                         document_cache,
                         snippet_support,
+                        None,
                     );
                 }
 
@@ -376,6 +377,7 @@ pub(crate) fn completion_at(
                     &token,
                     document_cache,
                     snippet_support,
+                    implement_statement_completion_suffix(&q.parent()?).as_deref(),
                 );
             }
             SyntaxKind::Type => {
@@ -1151,11 +1153,20 @@ fn enclosing_declaration_name(node: &SyntaxNode) -> Option<SmolStr> {
     identifier_text(&component.child_node(SyntaxKind::DeclaredIdentifier)?)
 }
 
+fn implement_statement_completion_suffix(statement: &SyntaxNode) -> Option<String> {
+    if statement.child_token(SyntaxKind::DoubleArrow).is_some() {
+        return None;
+    }
+    let semicolon = if statement.child_token(SyntaxKind::Semicolon).is_some() { "" } else { ";" };
+    Some(format!(" <=> ${{1:self}}{semicolon}"))
+}
+
 fn resolve_implement_interface_name_scope(
     node: &SyntaxNode,
     token: &SyntaxToken,
     document_cache: &editor_preview::DocumentCache,
     snippet_support: bool,
+    completion_suffix: Option<&str>,
 ) -> Option<Vec<CompletionItem>> {
     let global_type_register = document_cache.global_type_registry();
     let type_register = node
@@ -1176,7 +1187,12 @@ fn resolve_implement_interface_name_scope(
                 let mut completion =
                     CompletionItem::new_simple(key.to_string(), "interface".into());
                 completion.kind = Some(CompletionItemKind::INTERFACE);
-                completion
+                match completion_suffix {
+                    Some(suffix) => {
+                        completion.with_insert_text(format!("{key}{suffix}"), snippet_support)
+                    }
+                    None => completion,
+                }
             })
         })
         .collect::<Vec<_>>();
@@ -1184,7 +1200,7 @@ fn resolve_implement_interface_name_scope(
     drop(global_type_register);
 
     if snippet_support {
-        add_interfaces_to_import(token, document_cache, &mut result);
+        add_interfaces_to_import(token, document_cache, completion_suffix, &mut result);
     }
 
     Some(result)
@@ -1225,6 +1241,7 @@ fn collect_child_ids(element: &syntax_nodes::Element, result: &mut Vec<Completio
 fn add_interfaces_to_import(
     token: &SyntaxToken,
     document_cache: &editor_preview::DocumentCache,
+    completion_suffix: Option<&str>,
     result: &mut Vec<CompletionItem>,
 ) {
     let available_types: HashSet<_> =
@@ -1240,7 +1257,10 @@ fn add_interfaces_to_import(
         &mut |exported_name, file, the_import| {
             result.push(CompletionItem {
                 label: format!("{exported_name} (import from \"{file}\")"),
-                insert_text: Some(exported_name.to_string()),
+                insert_text: Some(format!(
+                    "{exported_name}{}",
+                    completion_suffix.unwrap_or_default()
+                )),
                 insert_text_format: Some(InsertTextFormat::SNIPPET),
                 filter_text: Some(exported_name.to_string()),
                 kind: Some(CompletionItemKind::INTERFACE),
@@ -2893,7 +2913,37 @@ export component TestWindow inherits Window {
         let completion =
             results.iter().find(|completion| completion.label == "MyInterface").unwrap();
         assert_eq!(completion.kind, Some(CompletionItemKind::INTERFACE));
+        assert_eq!(completion.insert_text.as_deref(), Some("MyInterface <=> ${1:self};"));
+        assert_eq!(completion.insert_text_format, Some(InsertTextFormat::SNIPPET));
         assert!(!results.iter().any(|completion| completion.label == "NotAnInterface"));
+    }
+
+    #[test]
+    fn implement_interface_name_completes_existing_statement() {
+        let source = r#"
+            interface MyInterface { property <int> x; }
+            component Foo {
+                implement My🔺Interface <=> self;
+            }
+        "#;
+        let results = get_completions_experimental(source).unwrap();
+        let completion =
+            results.iter().find(|completion| completion.label == "MyInterface").unwrap();
+        assert_eq!(completion.insert_text, None);
+    }
+
+    #[test]
+    fn implement_interface_name_keeps_existing_semicolon() {
+        let source = r#"
+            interface MyInterface { property <int> x; }
+            component Foo {
+                implement My🔺;
+            }
+        "#;
+        let results = get_completions_experimental(source).unwrap();
+        let completion =
+            results.iter().find(|completion| completion.label == "MyInterface").unwrap();
+        assert_eq!(completion.insert_text.as_deref(), Some("MyInterface <=> ${1:self}"));
     }
 
     #[test]
@@ -3054,7 +3104,7 @@ export component TestWindow inherits Window {
         assert_completion_found(
             &CompletionItem {
                 label: "MyInterface (import from \"types.slint\")".into(),
-                insert_text: Some("MyInterface".into()),
+                insert_text: Some("MyInterface <=> ${1:self};".into()),
                 filter_text: Some("MyInterface".into()),
                 additional_text_edits: Some(vec![TextEdit {
                     range: Range::new(Position::new(0, 0), Position::new(0, 0)),
@@ -3073,7 +3123,7 @@ export component TestWindow inherits Window {
         assert_completion_found(
             &CompletionItem {
                 label: "ButtonInterface (import from \"std-widget-interfaces.slint\")".into(),
-                insert_text: Some("ButtonInterface".into()),
+                insert_text: Some("ButtonInterface <=> ${1:self};".into()),
                 filter_text: Some("ButtonInterface".into()),
                 kind: Some(CompletionItemKind::INTERFACE),
                 detail: Some("(import from \"std-widget-interfaces.slint\")".into()),
