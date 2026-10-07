@@ -91,9 +91,7 @@ pub(crate) fn completion_at(
         && let Some(match_element) = match_element::case_value_position(&token, offset)
     {
         return match_element::case_value_completions(document_cache, &match_element, offset);
-    }
-
-    if token.kind() == SyntaxKind::StringLiteral {
+    } else if token.kind() == SyntaxKind::StringLiteral {
         if matches!(node.kind(), SyntaxKind::ImportSpecifier | SyntaxKind::AtImageUrl) {
             return complete_path_in_string(
                 token.source_file()?.path(),
