@@ -1391,7 +1391,7 @@ fn get_code_actions(
         }
     }
 
-    match_element::add_code_actions(document_cache, &token, &mut result);
+    completion::match_element::add_code_actions(document_cache, &token, &mut result);
 
     (!result.is_empty()).then_some(result)
 }
