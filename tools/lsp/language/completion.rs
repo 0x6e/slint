@@ -3,10 +3,11 @@
 
 // cSpell: ignore rfind barbar funi
 
+mod match_element;
+
 use crate::editor_preview::component_catalog::{self, all_exported_components, all_exported_types};
 use crate::editor_preview::editing::import_edit::{create_import_edit_impl, find_import_locations};
 use crate::editor_preview::{self, DocumentCache};
-use crate::language::match_element;
 use crate::util::{lookup_current_element_type, text_size_to_lsp_position, with_lookup_ctx};
 
 #[cfg(target_arch = "wasm32")]
