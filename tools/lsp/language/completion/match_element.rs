@@ -132,3 +132,198 @@ pub fn case_value_completions(
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::language::completion::tests::{get_completions, get_completions_experimental};
+    use lsp_types::{CompletionItem, CompletionItemKind};
+
+    fn match_body(body: &str) -> String {
+        format!(
+            r#"enum Nums {{ one, two, three }}
+export component Test {{
+    in-out property <Nums> num: one;
+
+    match num {{{body}}}
+}}
+"#
+        )
+    }
+
+    fn labels(results: &[CompletionItem]) -> Vec<&str> {
+        results.iter().map(|completion| completion.label.as_str()).collect()
+    }
+
+    #[test]
+    fn match_case_values_enum() {
+        let results = get_completions_experimental(&match_body(" 🔺 ")).unwrap();
+        assert_eq!(labels(&results), ["one", "two", "three"]);
+        assert_eq!(results[0].kind, Some(CompletionItemKind::ENUM_MEMBER));
+    }
+
+    #[test]
+    fn match_case_values_exclude_covered() {
+        let results = get_completions_experimental(&match_body(
+            "\n        one: Rectangle { }\n        🔺\n    ",
+        ))
+        .unwrap();
+        assert_eq!(labels(&results), ["two", "three"]);
+    }
+
+    #[test]
+    fn match_case_values_adjacent_to_previous_case() {
+        let results = get_completions_experimental(&match_body(" one: Rectangle { }🔺 ")).unwrap();
+        assert_eq!(labels(&results), ["two", "three"]);
+    }
+
+    #[test]
+    fn match_case_values_after_wildcard() {
+        let results =
+            get_completions_experimental(&match_body(" *: Rectangle { } 🔺 ")).unwrap_or_default();
+        assert!(labels(&results).is_empty());
+    }
+
+    #[test]
+    fn match_case_values_before_wildcard() {
+        let results = get_completions_experimental(&match_body(" 🔺 *: Rectangle { } ")).unwrap();
+        assert_eq!(labels(&results), ["one", "two", "three"]);
+    }
+
+    #[test]
+    fn match_case_values_adjacent_to_wildcard() {
+        // The cursor touches the '*' token, so it counts as inside the wildcard case
+        let results =
+            get_completions_experimental(&match_body(" 🔺*: Rectangle { } ")).unwrap_or_default();
+        assert!(labels(&results).is_empty());
+    }
+
+    #[test]
+    fn match_case_values_bool() {
+        let results = get_completions_experimental(
+            r#"export component Test {
+    in-out property <bool> flag: true;
+
+    match flag { true: Rectangle { } 🔺 }
+}
+"#,
+        )
+        .unwrap();
+        assert_eq!(labels(&results), ["false"]);
+        assert_eq!(results[0].kind, Some(CompletionItemKind::KEYWORD));
+    }
+
+    #[test]
+    fn match_case_values_unbounded_subject() {
+        let results = get_completions_experimental(
+            r#"export component Test {
+    in-out property <int> num;
+
+    match num { 🔺 }
+}
+"#,
+        )
+        .unwrap();
+        assert_eq!(labels(&results), ["*"]);
+        assert_eq!(results[0].kind, Some(CompletionItemKind::KEYWORD));
+    }
+
+    #[test]
+    fn match_case_values_partial_identifier() {
+        let results = get_completions_experimental(&match_body(" t🔺 ")).unwrap();
+        assert_eq!(labels(&results), ["one", "two", "three"]);
+    }
+
+    fn typed_match_body(property_type: &str, body: &str) -> String {
+        format!(
+            r#"export component Test {{
+    in-out property <{property_type}> subject;
+
+    match subject {{{body}}}
+}}
+"#
+        )
+    }
+
+    #[test]
+    fn match_case_values_inside_string_literal() {
+        let results =
+            get_completions_experimental(&typed_match_body("string", r#" "a🔺": Rectangle { } "#))
+                .unwrap_or_default();
+        assert!(labels(&results).is_empty());
+    }
+
+    #[test]
+    fn match_case_values_after_string_literal() {
+        // The offset sits on the token boundary, which is a position for a new case
+        let results =
+            get_completions_experimental(&typed_match_body("string", r#" "a"🔺 "#)).unwrap();
+        assert_eq!(labels(&results), ["*"]);
+    }
+
+    #[test]
+    fn match_case_values_inside_string_literal_with_enum_subject() {
+        let results = get_completions_experimental(&match_body(r#" "o🔺" "#)).unwrap_or_default();
+        assert!(labels(&results).is_empty());
+    }
+
+    #[test]
+    fn match_case_values_inside_number_literal() {
+        let results =
+            get_completions_experimental(&typed_match_body("int", " 1🔺2 ")).unwrap_or_default();
+        assert!(!labels(&results).contains(&"*"));
+    }
+
+    #[test]
+    fn match_case_values_inside_color_literal() {
+        let results = get_completions_experimental(&typed_match_body("color", " #f0🔺0 "))
+            .unwrap_or_default();
+        assert!(!labels(&results).contains(&"*"));
+    }
+
+    #[test]
+    fn match_case_values_not_in_case_body() {
+        let results = get_completions_experimental(&match_body(" one: Rectangle { 🔺 } ")).unwrap();
+        assert!(results.iter().any(|completion| completion.label == "background"));
+        assert!(!results.iter().any(|completion| completion.label == "two"));
+    }
+
+    #[test]
+    fn match_keyword_in_element() {
+        let results = get_completions_experimental(
+            r#"export component Test {
+    Rectangle {
+        🔺
+    }
+}
+"#,
+        )
+        .unwrap();
+        let completion = results.iter().find(|completion| completion.label == "match").unwrap();
+        assert_eq!(
+            completion.insert_text.as_deref(),
+            Some("match $1 {\n    $2: ${3:Rectangle} {\n        $0\n    }\n}")
+        );
+    }
+
+    #[test]
+    fn match_keyword_requires_experimental() {
+        let results = get_completions(
+            r#"export component Test {
+    Rectangle {
+        🔺
+    }
+}
+"#,
+        )
+        .unwrap();
+        assert!(!results.iter().any(|completion| completion.label == "match"));
+    }
+
+    #[test]
+    fn match_case_values_requires_experimental() {
+        let results = get_completions(&match_body(" 🔺 ")).unwrap_or_default();
+        for value in ["one", "two", "three"] {
+            assert!(!labels(&results).contains(&value));
+        }
+    }
+}
