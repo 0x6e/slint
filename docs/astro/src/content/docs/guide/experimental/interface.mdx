@@ -79,8 +79,10 @@ export component MyText {
 }
 ```
 
-When the interface marks a member [`@shadowable`](/guide/experimental/shadowable/#interface-members) or [`@deprecated`](/reference/language/deprecation/),
-the component's member must carry the same attribute.
+When the interface marks a member [`@shadowable`](/guide/experimental/shadowable/#interface-members),
+the component's member must be `@shadowable` too.
+When the interface marks a member [`@deprecated`](/reference/language/deprecation/),
+the compiler warns unless the component's member is `@deprecated` too.
 The deprecation message may differ.
 The component may also add attributes the interface doesn't have.
 If the component inherits the member from a base that lacks the attribute, add the attribute to the base.

@@ -496,6 +496,16 @@ pub(super) fn validate_interface_implementation(
     let mut errors = Vec::new();
     let mut notes = Vec::new();
     for (member_name, member) in declared_members(interface) {
+        if *binding == ImplementBinding::OnSelf {
+            warn_missing_deprecation(
+                element,
+                &member_name,
+                &member.declaration,
+                interface_name,
+                node,
+                diagnostics,
+            );
+        }
         if let Some(mut conflict) = validate_interface_member_implementation(
             element,
             &member_name,
@@ -525,6 +535,45 @@ pub(super) fn validate_interface_implementation(
         }
     }
     errors.is_empty()
+}
+
+fn warn_missing_deprecation(
+    element: &Element,
+    member_name: &SmolStr,
+    interface_member: &PropertyDeclaration,
+    interface_name: &SmolStr,
+    node: &SyntaxNode,
+    diagnostics: &mut BuildDiagnostics,
+) {
+    let Some(message) = &interface_member.deprecated else { return };
+    let property = element.lookup_property(member_name, PropertyLookupMode::ComponentLocal);
+    if !property.is_valid()
+        || matches!(property.property_type, Type::InferredProperty | Type::InferredCallback)
+        || property.deprecated.is_some()
+    {
+        return;
+    }
+
+    let kind = match interface_member.property_type {
+        Type::Callback(_) => "callback",
+        Type::Function(_) => "function",
+        _ => "property",
+    };
+    let deprecated =
+        format!("The {kind} '{member_name}' has been deprecated in '{interface_name}'");
+    let deprecated =
+        if message.is_empty() { deprecated } else { format!("{deprecated}: {message}") };
+    let source = element
+        .declaration(member_name)
+        .and_then(|(_, declaration)| declaration.node.clone())
+        .map_or_else(
+            || node.to_source_location(),
+            |declaration| DeclarationAnchor::Name.source_location(&declaration),
+        );
+    diagnostics.push_warning_with_span(
+        format!("{deprecated}. Deprecate it here to silence this warning"),
+        source,
+    );
 }
 
 fn validate_interface_member_implementation(
@@ -784,13 +833,6 @@ impl MemberAttribute {
             }
         }
     }
-
-    fn is_on(self, property: &PropertyLookupResult) -> bool {
-        match self {
-            Self::Shadowable => property.is_shadowable,
-            Self::Deprecated => property.deprecated.is_some(),
-        }
-    }
 }
 
 fn attributes(
@@ -988,14 +1030,15 @@ fn property_matches_interface(
         });
     }
 
-    if *binding == ImplementBinding::OnSelf {
-        let missing =
-            attributes(interface_declaration).filter(|attribute| !attribute.is_on(property));
-        errors.extend(missing.map(|attribute| MemberViolation {
-            error: format!("- '{member_name}' must be '{}'", attribute.name()),
+    if *binding == ImplementBinding::OnSelf
+        && interface_declaration.shadowable
+        && !property.is_shadowable
+    {
+        errors.push(MemberViolation {
+            error: format!("- '{member_name}' must be '{}'", MemberAttribute::Shadowable.name()),
             expected_syntax: expected_syntax.clone(),
             anchor: DeclarationAnchor::Name,
-        }));
+        });
     }
 
     if errors.is_empty() { Ok(()) } else { Err(errors) }
