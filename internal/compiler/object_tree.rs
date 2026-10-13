@@ -898,11 +898,13 @@ fn disallow_non_member_content(
     node.PropertyAnimation().for_each(|n| error_on(&n, "animations"));
     node.States().for_each(|n| error_on(&n, "states"));
     node.Transitions().for_each(|n| error_on(&n, "transitions"));
-    node.CallbackDeclaration().for_each(|cb| {
-        if parser::identifier_text(&cb.DeclaredIdentifier()).is_some_and(|s| s == "init") {
-            error_on(&cb, "an 'init' callback")
-        }
-    });
+    if matches!(declaration, ElementType::Global) {
+        node.CallbackDeclaration().for_each(|cb| {
+            if parser::identifier_text(&cb.DeclaredIdentifier()).is_some_and(|s| s == "init") {
+                error_on(&cb, "an 'init' callback")
+            }
+        });
+    }
     node.CallbackConnection().for_each(|cb| {
         if parser::identifier_text(&cb).is_some_and(|s| s == "init") {
             error_on(&cb, "an 'init' callback")
@@ -2296,7 +2298,7 @@ impl Element {
                 // Already rejected above with a more specific diagnostic.
                 (Vec::new(), Vec::new())
             } else if r.id == "root" {
-                interfaces::get_implemented_interfaces(&r, node, tr, diag)
+                interfaces::get_implemented_interfaces(node, tr, diag)
             } else {
                 interfaces::disallow_implement_in_non_root(node, tr, diag);
                 (Vec::new(), Vec::new())
@@ -2407,6 +2409,9 @@ impl Element {
             if let Some(csn) = sig_decl.TwoWayBinding() {
                 #[cfg(feature = "slint-sc")]
                 diag.slint_sc_error("Callback aliases are", &csn);
+                if is_interface {
+                    diag.push_error("Interface callbacks cannot be aliases".into(), &csn);
+                }
                 r.bindings
                     .0
                     .insert(name.clone(), BindingExpression::new_uncompiled(csn.into()).into());
