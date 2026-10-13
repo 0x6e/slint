@@ -2296,7 +2296,7 @@ impl Element {
                 // Already rejected above with a more specific diagnostic.
                 (Vec::new(), Vec::new())
             } else if r.id == "root" {
-                interfaces::get_implemented_interfaces(&r, node, tr, diag)
+                interfaces::get_implemented_interfaces(node, tr, diag)
             } else {
                 interfaces::disallow_implement_in_non_root(node, tr, diag);
                 (Vec::new(), Vec::new())

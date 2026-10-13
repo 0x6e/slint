@@ -54,7 +54,6 @@ export component ExtraAttributes {
 component AttributedBase {
     @shadowable in-out property <int> value;
     @deprecated("") callback changed();
-    @children
 }
 
 export component InheritsAttributes inherits AttributedBase {
@@ -155,7 +154,6 @@ export component MissingFunctionAttributes {
 component PlainBase {
     @shadowable in-out property <int> value;
     callback changed();
-    @children
 }
 
 export component InheritsMissingDeprecated inherits PlainBase {
